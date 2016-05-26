@@ -68,4 +68,53 @@ _sym_db.RegisterMessage(MultihashReference)
 
 DESCRIPTOR.has_options = True
 DESCRIPTOR._options = _descriptor._ParseOptions(descriptor_pb2.FileOptions(), _b('\n!io.mediachain.protocol.transactor'))
+import abc
+from grpc.beta import implementations as beta_implementations
+from grpc.framework.common import cardinality
+from grpc.framework.interfaces.face import utilities as face_utilities
+
+class BetaTransactorServiceServicer(object):
+  """<fill me in later!>"""
+  __metaclass__ = abc.ABCMeta
+  @abc.abstractmethod
+  def FetchObjectChainHead(self, request, context):
+    raise NotImplementedError()
+
+class BetaTransactorServiceStub(object):
+  """The interface to which stubs will conform."""
+  __metaclass__ = abc.ABCMeta
+  @abc.abstractmethod
+  def FetchObjectChainHead(self, request, timeout):
+    raise NotImplementedError()
+  FetchObjectChainHead.future = None
+
+def beta_create_TransactorService_server(servicer, pool=None, pool_size=None, default_timeout=None, maximum_timeout=None):
+  import Transactor_pb2
+  import Transactor_pb2
+  request_deserializers = {
+    ('protocol.TransactorService', 'FetchObjectChainHead'): Transactor_pb2.MultihashReference.FromString,
+  }
+  response_serializers = {
+    ('protocol.TransactorService', 'FetchObjectChainHead'): Transactor_pb2.MultihashReference.SerializeToString,
+  }
+  method_implementations = {
+    ('protocol.TransactorService', 'FetchObjectChainHead'): face_utilities.unary_unary_inline(servicer.FetchObjectChainHead),
+  }
+  server_options = beta_implementations.server_options(request_deserializers=request_deserializers, response_serializers=response_serializers, thread_pool=pool, thread_pool_size=pool_size, default_timeout=default_timeout, maximum_timeout=maximum_timeout)
+  return beta_implementations.server(method_implementations, options=server_options)
+
+def beta_create_TransactorService_stub(channel, host=None, metadata_transformer=None, pool=None, pool_size=None):
+  import Transactor_pb2
+  import Transactor_pb2
+  request_serializers = {
+    ('protocol.TransactorService', 'FetchObjectChainHead'): Transactor_pb2.MultihashReference.SerializeToString,
+  }
+  response_deserializers = {
+    ('protocol.TransactorService', 'FetchObjectChainHead'): Transactor_pb2.MultihashReference.FromString,
+  }
+  cardinalities = {
+    'FetchObjectChainHead': cardinality.Cardinality.UNARY_UNARY,
+  }
+  stub_options = beta_implementations.stub_options(host=host, metadata_transformer=metadata_transformer, request_serializers=request_serializers, response_deserializers=response_deserializers, thread_pool=pool, thread_pool_size=pool_size)
+  return beta_implementations.dynamic_stub(channel, 'protocol.TransactorService', cardinalities, options=stub_options)
 # @@protoc_insertion_point(module_scope)
