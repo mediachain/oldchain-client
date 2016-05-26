@@ -3,6 +3,8 @@ import cbor
 from grpc.beta import implementations
 from mediachain.proto import Transactor_pb2
 
+TIMEOUT_SECS=120
+
 def get_client(host, port):
     channel = implementations.insecure_channel(host, port)
     return Transactor_pb2.beta_create_TransactorService_stub(channel)
@@ -10,7 +12,7 @@ def get_client(host, port):
 def get_chain_head(ns):
     client = get_client(ns.host, ns.port)
     request = Transactor_pb2.MultihashReference(reference=ns.object_id)
-    chain_head = client.FetchObjectChainHead(request)
+    chain_head = client.FetchObjectChainHead(request, TIMEOUT_SECS)
     return get_object_chain_from_head(chain_head.reference)
 
 def get_table(name):
