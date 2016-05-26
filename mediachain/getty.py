@@ -1,8 +1,6 @@
 import json
-
 from os import walk
 from os.path import join
-
 from data_objects import Artefact
 
 
@@ -35,6 +33,10 @@ def getty_artefacts(dd='getty/json/images',
             fn = join(dir_name, fn)
 
             with open(fn) as f:
-                getty = json.load(f)
+                try:
+                    getty = json.load(f)
+                    yield getty_to_artefact(getty)
+                except ValueError:
+                    print "couldn't decode json from {}".format(fn)
+                    continue
 
-            yield getty_to_artefact(getty)
