@@ -2,7 +2,6 @@ import sys
 import argparse
 import os
 import mediachain.reader.api
-from mediachain.reader.api import Config
 
 def main(arguments=None):
     if arguments == None:
@@ -38,7 +37,6 @@ def main(arguments=None):
     }
 
     ns = parser.parse_args(arguments)
-    cfg = Config(host=ns.host, port=ns.port)
     fn = getattr(mediachain.reader.api, SUBCOMMANDS[ns.subcommand])
     fn(ns)
 
