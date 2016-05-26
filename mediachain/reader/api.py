@@ -1,7 +1,7 @@
 import boto3
 import cbor
 from grpc.beta import implementations
-from mediachain import Transactor_pb2
+from mediachain.proto import Transactor_pb2
 from collections import namedtuple
 
 Config = namedtuple('Config', ['host', 'port'])
