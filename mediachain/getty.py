@@ -11,8 +11,8 @@ def getty_to_artefact(getty_json):
             'collection_name': getty_json['collection_name'],
             'caption': getty_json['caption'],
             'editorial_source': getty_json['editorial_source'].get('name', None),
-            'keywords': ' '.join(
-                [x['text'] for x in getty_json['keywords'] if 'text' in x]),
+            'keywords':
+                [x['text'] for x in getty_json['keywords'] if 'text' in x],
             'date_created': getty_json['date_created']
             }
 
