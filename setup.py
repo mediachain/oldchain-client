@@ -20,6 +20,6 @@ setup(
             'mediachain-reader = mediachain.reader.main:main'
         ]
     },
-    url='http://mine.nyc',
+    url='http://mediachain.io',
     install_requires=reqs,
 )
