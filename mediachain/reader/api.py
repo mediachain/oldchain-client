@@ -14,7 +14,7 @@ def get_chain_head(config, object_id):
     client = get_client(config.host, config.port)
     request = Transactor_pb2.MultihashReference(reference=object_id)
     chain_head = client.FetchObjectChainHead(request)
-    return get_object_chain(chain_head.reference)
+    return get_object_chain_from_head(chain_head.reference)
 
 def get_table(name):
     dynamo = boto3.resource('dynamo')
