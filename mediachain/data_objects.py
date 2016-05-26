@@ -34,7 +34,7 @@ class Record(object):
             if val:
                 m[f] = val
 
-        cbor.dumps(m, sort_keys=True)
+        return cbor.dumps(m, sort_keys=True)
 
 
 class Artefact(Record):

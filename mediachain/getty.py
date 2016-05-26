@@ -19,7 +19,7 @@ def getty_to_artefact(getty_json):
             'date_created': date_parser.parse(getty_json['date_created'])
             }
 
-    Artefact(meta)
+    return Artefact(meta)
 
 
 def getty_artefacts(dd='getty/json/images',
