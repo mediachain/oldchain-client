@@ -4,7 +4,6 @@ from os import walk
 from os.path import join
 
 from data_objects import Artefact
-from dateutil import parser as date_parser
 
 
 def getty_to_artefact(getty_json):
@@ -16,7 +15,7 @@ def getty_to_artefact(getty_json):
             'editorial_source': getty_json['editorial_source'].get('name', None),
             'keywords': ' '.join(
                 [x['text'] for x in getty_json['keywords'] if 'text' in x]),
-            'date_created': date_parser.parse(getty_json['date_created'])
+            'date_created': getty_json['date_created']
             }
 
     return Artefact(meta)
