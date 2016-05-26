@@ -1,4 +1,5 @@
 import cbor
+import pprint
 
 
 class Record(object):
@@ -19,7 +20,11 @@ class Record(object):
     def __init__(self, meta):
         self.meta = meta
 
-    def to_cbor_bytes(self):
+    def __str__(self):
+        pp = pprint.PrettyPrinter(indent=2)
+        return pp.pformat(self.to_map())
+
+    def to_map(self):
         m = {"type": self.mediachain_type()}
 
         for f in self.required_fields():
@@ -33,8 +38,10 @@ class Record(object):
             val = self.__dict__[f]
             if val:
                 m[f] = val
+        return m
 
-        return cbor.dumps(m, sort_keys=True)
+    def to_cbor_bytes(self):
+        return cbor.dumps(self.to_map(), sort_keys=True)
 
 
 class Artefact(Record):
