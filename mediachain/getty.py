@@ -1,10 +1,16 @@
 import json
 from os import walk
 from os.path import join
-from data_objects import Artefact
+from data_objects import Artefact, Entity, ArtefactCreationCell
 
 
-def getty_to_artefact(getty_json):
+def getty_to_mediachain_objects(getty_json):
+    artist_name = getty_json['artist']
+    entity = Entity({'name': artist_name})
+    # FIXME: we should be getting a real MultiHashReference by adding the Entity
+    # to the datastore, since in e.g. IPFS, the mutihash may differ from the
+    # hash of the raw object (headers, etc).
+
     meta = {'_id': 'getty_' + getty_json['id'],
             'title': getty_json['title'],
             'artist': getty_json['artist'],
@@ -16,7 +22,10 @@ def getty_to_artefact(getty_json):
             'date_created': getty_json['date_created']
             }
 
-    return Artefact(meta)
+    artefact = Artefact(meta)
+    creation_cell = ArtefactCreationCell(meta={}, ref=artefact, entity=entity)
+
+    return artefact, entity, creation_cell
 
 
 def getty_artefacts(dd='getty/json/images',
@@ -35,7 +44,7 @@ def getty_artefacts(dd='getty/json/images',
             with open(fn) as f:
                 try:
                     getty = json.load(f)
-                    yield getty_to_artefact(getty)
+                    yield getty_to_mediachain_objects(getty)
                 except ValueError:
                     print "couldn't decode json from {}".format(fn)
                     continue
