@@ -12,7 +12,7 @@ def main(arguments=None):
         description='Mediachain Reader CLI'
     )
 
-    parser.add_argument('-h', '--host',
+    parser.add_argument('-s', '--host',
                         type=str,
                         required=True,
                         dest='host')
