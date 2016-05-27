@@ -1,5 +1,6 @@
 import cbor
 from multihash import SHA2_256, encode as multihash_encode
+from base58 import b58encode
 import pprint
 
 
@@ -47,6 +48,9 @@ class Record(object):
     def multihash(self):
         return multihash_encode(self.to_cbor_bytes(), SHA2_256)
 
+    def multihash_base58(self):
+        return b58encode(str(self.multihash()))
+
 
 class Artefact(Record):
     @staticmethod
@@ -72,6 +76,8 @@ class MultihashReference(object):
     def to_cbor_bytes(self):
         return cbor.dumps(self.to_map(), sort_keys=True)
 
+    def multihash_base58(self):
+        return b58encode(str(self.multihash()))
 
 class ChainCell(Record):
     ref = None
