@@ -14,7 +14,6 @@ def get_object(host, port, object_id):
     except KeyError as e:
         pass
 
-
 def apply_update_cell(acc, cell):
     result = copy.deepcopy(acc)
 
