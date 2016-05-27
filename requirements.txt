@@ -3,6 +3,6 @@ botocore==1.4.24
 cbor==1.0.0
 docutils==0.12
 jmespath==0.9.0
-multihash==0.1.1
+-e git+https://github.com/yusefnapora/python-multihash.git@93b14b4fce9b9721955b837c648f467ac2cf3d22#egg=multihash
 python-dateutil==2.5.3
 six==1.10.0
