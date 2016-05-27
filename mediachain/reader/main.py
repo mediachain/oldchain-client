@@ -1,7 +1,7 @@
 import sys
 import argparse
 import os
-import mediachain.reader.api
+from mediachain.reader import api
 
 def main(arguments=None):
     if arguments == None:
@@ -33,11 +33,11 @@ def main(arguments=None):
                             help='The id of the artefact/entity to fetch')
 
     SUBCOMMANDS={
-        'get': 'get_chain_head'
+        'get': lambda ns: api.get_object(ns.host, ns.port, ns.object_id)
     }
 
     ns = parser.parse_args(arguments)
-    fn = getattr(mediachain.reader.api, SUBCOMMANDS[ns.subcommand])
+    fn = SUBCOMMANDS[ns.subcommand]
     fn(ns)
 
 if __name__ == "__main__":

@@ -1,36 +1,55 @@
-import boto3
 import cbor
-from grpc.beta import implementations
-from mediachain.proto import Transactor_pb2
+from mediachain.reader import dynamo
+from mediachain.reader.transactor import get_chain_head
+import copy
 
-TIMEOUT_SECS=120
+def get_object(host, port, object_id):
+    head = get_chain_head(host, port, object_id)
+    chain = get_object_chain(head)
+    obj = reduce(chain_folder, chain, dict())
 
-def get_client(host, port):
-    channel = implementations.insecure_channel(host, port)
-    return Transactor_pb2.beta_create_TransactorService_stub(channel)
+    try:
+        entity_id = obj['entity']
+        obj['entity'] = get_object(host, port, entity_id)
+    except KeyError as e:
+        pass
 
-def get_chain_head(ns):
-    client = get_client(ns.host, ns.port)
-    request = Transactor_pb2.MultihashReference(reference=ns.object_id)
-    chain_head = client.FetchObjectChainHead(request, TIMEOUT_SECS)
-    return get_object_chain_from_head(chain_head.reference)
 
-def get_table(name):
-    dynamo = boto3.resource('dynamo')
-    return dynamo.Table(name)
+def apply_update_cell(acc, cell):
+    result = copy.deepcopy(acc)
 
-def get_object(reference):
-    table = get_table('mediachain')
-    byte_string = table.get_item(Key={'multihash': reference})
-    if byte_string is None:
-        raise KeyError('Could not find key <%s> in Dyanmo'.format(reference))
-    return cbor.loads(byte_string)
+    for k, v in cell['meta'].iteritems():
+        result[k] = v
 
-def get_object_chain_from_head(reference, acc=[]):
+    return result
+
+def apply_creation_cell(acc, update):
+    result = copy.deepcopy(acc)
+    result['entity'] = update['entity']
+
+    return result
+
+def chain_folder(acc, x):
+    cell_type = x.get('type')
+
+    fn_map = {
+        'artefactCreationCell': apply_creation_cell,
+        'artefactUpdateCell': apply_update_cell,
+        'entityUpdateCell': apply_update_cell
+    }
+
+    try:
+        # apply a transform if we have one
+        return fn_map[cell_type](acc, x)
+    except KeyError as e:
+        # otherwise, skip
+        return acc
+
+def get_object_chain(reference, acc=[]):
     if reference is None:
         return acc
 
-    obj = get_object(reference)
+    obj = dynamo.get_object(reference)
     next_ref = obj.get('chain')
 
     return get_object_chain(next_ref, acc + [obj])
