@@ -3,14 +3,21 @@ from os import walk
 from os.path import join
 from data_objects import Artefact, Entity, ArtefactCreationCell
 from datastore.dynamo import DynamoDatastore
+from datetime import datetime
+
+TRANSLATOR_ID = 'GettyTranslator/1.0'
 
 
-def getty_to_mediachain_objects(getty_json, datastore):
+def getty_to_mediachain_objects(raw_ref, getty_json, datastore):
+    common_meta = {'rawRef': raw_ref,
+                   'translatedAt': datetime.utcnow().isoformat(),
+                   'translator': TRANSLATOR_ID}
+
     artist_name = getty_json['artist']
-    entity = Entity({'name': artist_name})
-    entity_ref = datastore.put(entity)
+    artist_meta = dict(common_meta, data={'name': artist_name})
+    entity = Entity(artist_meta)
 
-    meta = {'_id': 'getty_' + getty_json['id'],
+    data = {'_id': 'getty_' + getty_json['id'],
             'title': getty_json['title'],
             'artist': getty_json['artist'],
             'collection_name': getty_json['collection_name'],
@@ -21,9 +28,12 @@ def getty_to_mediachain_objects(getty_json, datastore):
             'date_created': getty_json['date_created']
             }
 
-    artefact = Artefact(meta)
+    artefact_meta = dict(common_meta, data=data)
+    artefact = Artefact(artefact_meta)
+
+    entity_ref = datastore.put(entity)
     artefact_ref = datastore.put(artefact)
-    creation_cell = ArtefactCreationCell(meta={},
+    creation_cell = ArtefactCreationCell(meta=common_meta,
                                          ref=artefact_ref,
                                          entity=entity_ref)
 
@@ -46,10 +56,12 @@ def getty_artefacts(dd='getty/json/images',
 
             fn = join(dir_name, fn)
 
-            with open(fn) as f:
+            with open(fn, mode='rb') as f:
                 try:
-                    getty = json.load(f)
-                    yield getty_to_mediachain_objects(getty, datastore)
+                    content = f.read()
+                    raw_ref = datastore.put(content)
+                    getty = json.loads(content.decode('utf-8'))
+                    yield getty_to_mediachain_objects(raw_ref, getty, datastore)
                 except ValueError:
                     print "couldn't decode json from {}".format(fn)
                     continue
