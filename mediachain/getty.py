@@ -10,7 +10,7 @@ TRANSLATOR_ID = 'GettyTranslator/0.1'
 
 
 def getty_to_mediachain_objects(raw_ref, getty_json, datastore):
-    common_meta = {'rawRef': raw_ref.to_cbor_bytes(),
+    common_meta = {'rawRef': raw_ref.to_map(),
                    'translatedAt': datetime.utcnow().isoformat(),
                    'translator': TRANSLATOR_ID}
 
