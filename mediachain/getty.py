@@ -1,17 +1,14 @@
 import json
 from os import walk
 from os.path import join
-from data_objects import Artefact, Entity, ArtefactCreationCell, \
-    MultihashReference
+from data_objects import Artefact, Entity, ArtefactCreationCell
+from datastore.dynamo import DynamoDatastore
 
 
-def getty_to_mediachain_objects(getty_json):
+def getty_to_mediachain_objects(getty_json, datastore):
     artist_name = getty_json['artist']
     entity = Entity({'name': artist_name})
-    # FIXME: we should be getting a real MultiHashReference by adding the Entity
-    # to the datastore, since in e.g. IPFS, the mutihash may differ from the
-    # hash of the raw object (headers, etc).
-    entity_ref = MultihashReference(entity.multihash())
+    entity_ref = datastore.put(entity)
 
     meta = {'_id': 'getty_' + getty_json['id'],
             'title': getty_json['title'],
@@ -25,16 +22,19 @@ def getty_to_mediachain_objects(getty_json):
             }
 
     artefact = Artefact(meta)
-    artefact_ref = MultihashReference(artefact.multihash())
+    artefact_ref = datastore.put(artefact)
     creation_cell = ArtefactCreationCell(meta={},
                                          ref=artefact_ref,
                                          entity=entity_ref)
+
+    datastore.put(creation_cell)
 
     return artefact, entity, creation_cell
 
 
 def getty_artefacts(dd='getty/json/images',
-                    max_num=0):
+                    max_num=0,
+                    datastore=DynamoDatastore()):
     nn = 0
     for dir_name, subdir_list, file_list in walk(dd):
         for fn in file_list:
@@ -49,7 +49,7 @@ def getty_artefacts(dd='getty/json/images',
             with open(fn) as f:
                 try:
                     getty = json.load(f)
-                    yield getty_to_mediachain_objects(getty)
+                    yield getty_to_mediachain_objects(getty, datastore)
                 except ValueError:
                     print "couldn't decode json from {}".format(fn)
                     continue
