@@ -1,7 +1,8 @@
 import json
 from os import walk
 from os.path import join
-from data_objects import Artefact, Entity, ArtefactCreationCell
+from data_objects import Artefact, Entity, ArtefactCreationCell, \
+    MultihashReference
 
 
 def getty_to_mediachain_objects(getty_json):
@@ -10,6 +11,7 @@ def getty_to_mediachain_objects(getty_json):
     # FIXME: we should be getting a real MultiHashReference by adding the Entity
     # to the datastore, since in e.g. IPFS, the mutihash may differ from the
     # hash of the raw object (headers, etc).
+    entity_ref = MultihashReference(entity.multihash())
 
     meta = {'_id': 'getty_' + getty_json['id'],
             'title': getty_json['title'],
@@ -23,7 +25,10 @@ def getty_to_mediachain_objects(getty_json):
             }
 
     artefact = Artefact(meta)
-    creation_cell = ArtefactCreationCell(meta={}, ref=artefact, entity=entity)
+    artefact_ref = MultihashReference(artefact.multihash())
+    creation_cell = ArtefactCreationCell(meta={},
+                                         ref=artefact_ref,
+                                         entity=entity_ref)
 
     return artefact, entity, creation_cell
 

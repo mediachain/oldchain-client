@@ -87,8 +87,7 @@ class ChainCell(Record):
 
     def __init__(self, meta, ref, chain=None):
         super(ChainCell, self).__init__(meta)
-        self.ref = canonical_reference(ref)
-
+        self.ref = ref
         self.chain = chain
 
 
@@ -107,20 +106,6 @@ class ArtefactCreationCell(ChainCell):
 
     def __init__(self, meta, ref, entity, chain=None):
         super(ArtefactCreationCell, self).__init__(meta, ref, chain)
-        self.entity = canonical_reference(entity)
+        self.entity = entity
 
 
-# Helpers
-
-
-def canonical_reference(ref_or_record):
-    if isinstance(ref_or_record, MultihashReference):
-        return ref_or_record
-
-    if isinstance(ref_or_record, Entity) or isinstance(ref_or_record, Artefact):
-        return MultihashReference(ref_or_record.multihash())
-
-    raise Exception(
-        'Expected Entity, Artefact, or MultihashReference, got {}'
-        .format(type(ref_or_record))
-    )
