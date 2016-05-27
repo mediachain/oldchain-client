@@ -1,22 +1,25 @@
 import json
 from os import walk
 from os.path import join
-from data_objects import Artefact, Entity, ArtefactCreationCell, \
+from mediachain.data_objects import Artefact, Entity, ArtefactCreationCell, \
     MultihashReference
-from datastore.dynamo import DynamoDatastore
+from mediachain.datastore.dynamo import DynamoDatastore
 from datetime import datetime
 
 TRANSLATOR_ID = 'GettyTranslator/0.1'
 
 
-def getty_to_mediachain_objects(raw_ref, getty_json, datastore):
+def getty_to_mediachain_objects(raw_ref, getty_json, entities, datastore):
     common_meta = {'rawRef': raw_ref.to_map(),
                    'translatedAt': datetime.utcnow().isoformat(),
                    'translator': TRANSLATOR_ID}
 
     artist_name = getty_json['artist']
-    artist_meta = dict(common_meta, data={'name': artist_name})
-    entity = Entity(artist_meta)
+    if artist_name in entities:
+        entity = entities[artist_name]
+    else:
+        artist_meta = dict(common_meta, data={'name': artist_name})
+        entity = Entity(artist_meta)
 
     data = {'_id': 'getty_' + getty_json['id'],
             'title': getty_json['title'],
@@ -46,6 +49,37 @@ def getty_to_mediachain_objects(raw_ref, getty_json, datastore):
 def getty_artefacts(dd='getty/json/images',
                     max_num=0,
                     datastore=DynamoDatastore()):
+    entities = dedup_artists(dd, max_num, datastore)
+
+    for content, getty_json in walk_json_dir(dd, max_num):
+        raw_ref_str = datastore.put(content)
+        raw_ref = MultihashReference.from_base58(raw_ref_str)
+        yield getty_to_mediachain_objects(raw_ref, getty_json, entities, datastore)
+
+
+def dedup_artists(dd='getty/json/images',
+                  max_num=0,
+                  datastore=DynamoDatastore()):
+    artist_name_map = {}
+    for content, getty_json in walk_json_dir(dd, max_num):
+        raw_ref_str = datastore.put(content)
+        n = getty_json['artist']
+        if n is None or n in artist_name_map:
+            continue
+        artist_name_map[n] = raw_ref_str
+
+    entities = {}
+    for n, raw_ref_str in artist_name_map.iteritems():
+        meta = {'rawRef': MultihashReference.from_base58(raw_ref_str).to_map(),
+                'translatedAt': datetime.utcnow().isoformat(),
+                'translator': TRANSLATOR_ID,
+                'data': {'name': n}}
+        entities[n] = Entity(meta)
+    return entities
+
+
+def walk_json_dir(dd='getty/json/images',
+                  max_num=0):
     nn = 0
     for dir_name, subdir_list, file_list in walk(dd):
         for fn in file_list:
@@ -60,11 +94,8 @@ def getty_artefacts(dd='getty/json/images',
             with open(fn, mode='rb') as f:
                 try:
                     content = f.read()
-                    raw_ref_str = datastore.put(content)
-                    raw_ref = MultihashReference.from_base58(raw_ref_str)
-                    getty = json.loads(content.decode('utf-8'))
-                    yield getty_to_mediachain_objects(raw_ref, getty, datastore)
+                    decoded_json = json.loads(content.decode('utf-8'))
+                    yield content, decoded_json
                 except ValueError:
                     print "couldn't decode json from {}".format(fn)
                     continue
-
