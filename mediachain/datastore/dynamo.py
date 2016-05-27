@@ -20,6 +20,7 @@ class DynamoDatastore(object):
         multihash = data_object.multihash()
         byte_string = data_object.to_cbor_bytes()
         table.put_item(Item={'multihash': multihash, 'data': byte_string})
+        return multihash
 
     def get(self, ref):
         table = self.mediachain_table()
