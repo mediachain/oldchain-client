@@ -1,6 +1,6 @@
 import cbor
 from multihash import SHA2_256, encode as multihash_encode
-from base58 import b58encode
+from base58 import b58encode, b58decode
 import pprint
 
 
@@ -67,6 +67,11 @@ class Entity(Record):
 class MultihashReference(object):
     multihash = None
 
+    @classmethod
+    def from_base58(cls, base58str):
+        byte_string = b58decode(base58str)
+        return cls(byte_string)
+
     def __init__(self, multihash):
         self.multihash = multihash
 
@@ -78,6 +83,7 @@ class MultihashReference(object):
 
     def multihash_base58(self):
         return b58encode(str(self.multihash()))
+
 
 class ChainCell(Record):
     ref = None

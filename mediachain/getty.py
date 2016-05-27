@@ -1,15 +1,16 @@
 import json
 from os import walk
 from os.path import join
-from data_objects import Artefact, Entity, ArtefactCreationCell
+from data_objects import Artefact, Entity, ArtefactCreationCell, \
+    MultihashReference
 from datastore.dynamo import DynamoDatastore
 from datetime import datetime
 
-TRANSLATOR_ID = 'GettyTranslator/1.0'
+TRANSLATOR_ID = 'GettyTranslator/0.1'
 
 
 def getty_to_mediachain_objects(raw_ref, getty_json, datastore):
-    common_meta = {'rawRef': raw_ref,
+    common_meta = {'rawRef': raw_ref.to_cbor_bytes(),
                    'translatedAt': datetime.utcnow().isoformat(),
                    'translator': TRANSLATOR_ID}
 
@@ -59,7 +60,8 @@ def getty_artefacts(dd='getty/json/images',
             with open(fn, mode='rb') as f:
                 try:
                     content = f.read()
-                    raw_ref = datastore.put(content)
+                    raw_ref_str = datastore.put(content)
+                    raw_ref = MultihashReference.from_base58(raw_ref_str)
                     getty = json.loads(content.decode('utf-8'))
                     yield getty_to_mediachain_objects(raw_ref, getty, datastore)
                 except ValueError:

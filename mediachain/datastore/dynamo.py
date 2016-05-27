@@ -2,6 +2,8 @@ import boto3
 from boto3.dynamodb.types import Binary
 import cbor
 from mediachain.data_objects import Record, MultihashReference
+from multihash import encode as multihash_encode, SHA2_256
+from base58 import b58encode
 
 
 class DynamoDatastore(object):
@@ -16,12 +18,18 @@ class DynamoDatastore(object):
 
     def put(self, data_object):
         # TODO: implement chunked writes for large objects
-        assert(isinstance(data_object, Record))
         table = self.mediachain_table()
-        key = data_object.multihash_base58()
-        byte_string = data_object.to_cbor_bytes()
+
+        if isinstance(data_object, Record):
+            key = data_object.multihash_base58()
+            content = data_object.to_cbor_bytes()
+        else:
+            hash_bytes = multihash_encode(data_object, SHA2_256)
+            key = b58encode(str(hash_bytes))
+            content = data_object
+
         table.put_item(Item={'multihash': key,
-                             'data': Binary(byte_string)})
+                             'data': Binary(content)})
         return key
 
     def get(self, ref):
