@@ -1,7 +1,6 @@
 import cbor
 from multihash import SHA2_256, encode as multihash_encode
 import pprint
-import hashlib
 
 
 class Record(object):
@@ -46,7 +45,7 @@ class Record(object):
         return cbor.dumps(self.to_map(), sort_keys=True)
 
     def multihash(self):
-        return multihash_for_bytes(self.to_cbor_bytes())
+        return multihash_encode(self.to_cbor_bytes(), SHA2_256)
 
 
 class Artefact(Record):
@@ -112,10 +111,6 @@ class ArtefactCreationCell(ChainCell):
 
 
 # Helpers
-def multihash_for_bytes(content_bytes):
-    h = hashlib.sha256()
-    h.update(content_bytes)
-    return multihash_encode(h.digest(), SHA2_256)
 
 
 def canonical_reference(ref_or_record):
