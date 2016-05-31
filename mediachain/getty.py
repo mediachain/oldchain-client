@@ -22,7 +22,7 @@ def ingest(host, port, dir_root, datastore_url=None, max_num=0):
 
 def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
     common_meta = {u'rawRef': raw_ref.to_map(),
-                   u'translatedAt': datetime.utcnow().isoformat(),
+                   u'translatedAt': unicode(datetime.utcnow().isoformat()),
                    u'translator': TRANSLATOR_ID}
 
     artist_name = getty_json['artist']
@@ -87,7 +87,7 @@ def dedup_artists(dd='getty/json/images',
     entities = {}
     for n, raw_ref_str in artist_name_map.iteritems():
         meta = {u'rawRef': MultihashReference.from_base58(raw_ref_str).to_map(),
-                u'translatedAt': datetime.utcnow().isoformat(),
+                u'translatedAt': unicode(datetime.utcnow().isoformat()),
                 u'translator': TRANSLATOR_ID,
                 u'data': {u'name': n}}
         entities[n] = Entity(meta)
