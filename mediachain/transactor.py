@@ -7,13 +7,13 @@ TIMEOUT_SECS = 120
 
 
 def assert_canonical(record):
-    assert(isinstance(record, Artefact) or isinstance(record, Entity),
-           "Expected artefact or entity, got " + str(type(record)))
+    assert (isinstance(record, Artefact) or isinstance(record, Entity)), \
+           "Expected artefact or entity, got " + str(type(record))
 
 
 def assert_chaincell(cell):
-    assert(isinstance(cell, ChainCell),
-           "Expected chain cell, got " + str(type(cell)))
+    assert isinstance(cell, ChainCell), \
+           "Expected chain cell, got " + str(type(cell))
 
 
 class TransactorClient(object):
@@ -24,12 +24,12 @@ class TransactorClient(object):
 
     def insert(self, record):
         assert_canonical(record)
-        req = Transactor_pb2.InsertRequest(record.to_cbor_bytes())
-        ref = self.client.InsertCanonicalRecord(req)
+        req = Transactor_pb2.InsertRequest(canonicalCbor=record.to_cbor_bytes())
+        ref = self.client.InsertCanonicalRecord(req, TIMEOUT_SECS)
         return MultihashReference.from_base58(ref.multihash)
 
     def update(self, cell):
         assert_chaincell(cell)
-        req = Transactor_pb2.UpdateRequest(cell.to_cbor_bytes())
-        ref = self.client.UpdateCanonicalRecord(req)
+        req = Transactor_pb2.UpdateRequest(chainCellCbor=cell.to_cbor_bytes())
+        ref = self.client.UpdateCanonicalRecord(req, TIMEOUT_SECS)
         return MultihashReference.from_base58(ref.multihash)

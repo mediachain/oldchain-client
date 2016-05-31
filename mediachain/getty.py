@@ -4,9 +4,20 @@ from os.path import join
 from mediachain.data_objects import Artefact, Entity, ArtefactCreationCell, \
     MultihashReference
 from mediachain.datastore.dynamo import DynamoDatastore
+from mediachain.transactor import TransactorClient
 from datetime import datetime
 
 TRANSLATOR_ID = 'GettyTranslator/0.1'
+
+
+def ingest(host, port, dir_root, datastore_url=None, max_num=0):
+    transactor = TransactorClient(host, port)
+    datastore = DynamoDatastore(endpoint_url=datastore_url)
+
+    for artefact, entity, cell in getty_artefacts(
+        transactor, dir_root, max_num, datastore
+    ):
+        print "Ingested artefact: " + str(artefact)
 
 
 def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
@@ -64,6 +75,7 @@ def getty_artefacts(transactor,
 def dedup_artists(dd='getty/json/images',
                   max_num=0,
                   datastore=DynamoDatastore()):
+    print("deduplicating getty artists.  This may take a while...")
     artist_name_map = {}
     for content, getty_json in walk_json_dir(dd, max_num):
         raw_ref_str = datastore.put(content)
