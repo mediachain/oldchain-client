@@ -9,7 +9,7 @@ from datetime import datetime
 TRANSLATOR_ID = 'GettyTranslator/0.1'
 
 
-def getty_to_mediachain_objects(raw_ref, getty_json, entities, datastore):
+def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
     common_meta = {'rawRef': raw_ref.to_map(),
                    'translatedAt': datetime.utcnow().isoformat(),
                    'translator': TRANSLATOR_ID}
@@ -35,18 +35,20 @@ def getty_to_mediachain_objects(raw_ref, getty_json, entities, datastore):
     artefact_meta = dict(common_meta, data=data)
     artefact = Artefact(artefact_meta)
 
-    entity_ref = datastore.put(entity)
-    artefact_ref = datastore.put(artefact)
+    # TODO: catch RPC errors here
+    entity_ref = transactor.insert(entity)
+    artefact_ref = transactor.insert(artefact)
     creation_cell = ArtefactCreationCell(meta=common_meta,
                                          ref=artefact_ref,
                                          entity=entity_ref)
 
-    datastore.put(creation_cell)
+    transactor.update(creation_cell)
 
     return artefact, entity, creation_cell
 
 
-def getty_artefacts(dd='getty/json/images',
+def getty_artefacts(transactor,
+                    dd='getty/json/images',
                     max_num=0,
                     datastore=DynamoDatastore()):
     entities = dedup_artists(dd, max_num, datastore)
@@ -54,7 +56,9 @@ def getty_artefacts(dd='getty/json/images',
     for content, getty_json in walk_json_dir(dd, max_num):
         raw_ref_str = datastore.put(content)
         raw_ref = MultihashReference.from_base58(raw_ref_str)
-        yield getty_to_mediachain_objects(raw_ref, getty_json, entities, datastore)
+        yield getty_to_mediachain_objects(
+            transactor, raw_ref, getty_json, entities
+        )
 
 
 def dedup_artists(dd='getty/json/images',
