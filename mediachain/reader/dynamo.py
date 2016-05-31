@@ -6,7 +6,8 @@ def get_table(name):
 
 def get_object(reference):
     table = get_table('mediachain')
-    byte_string = table.get_item(Key={'multihash': reference})
+    obj = table.get_item(Key={'multihash': reference})
+    byte_string = obj['Item']['data']
 
     if byte_string is None:
         raise KeyError('Could not find key <%s> in Dynamo'.format(reference))
