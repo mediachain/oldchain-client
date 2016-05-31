@@ -4,7 +4,7 @@ from mediachain import getty
 
 
 def main(arguments=None):
-    if arguments == None:
+    if arguments is None:
         arguments = sys.argv[1:]
 
     parser = argparse.ArgumentParser(

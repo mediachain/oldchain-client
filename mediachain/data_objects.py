@@ -13,7 +13,7 @@ class Record(object):
 
     @staticmethod
     def required_fields():
-        return ["meta"]
+        return [u'meta']
 
     @staticmethod
     def optional_fields():
@@ -27,7 +27,7 @@ class Record(object):
         return pp.pformat(self.to_map())
 
     def to_map(self):
-        m = {"type": self.mediachain_type()}
+        m = {u'type': self.mediachain_type()}
 
         for f in self.required_fields():
             val = self.__dict__[f]
@@ -40,6 +40,9 @@ class Record(object):
             val = self.__dict__[f]
             if val:
                 m[f] = val
+
+        pp = pprint.PrettyPrinter(indent=2)
+        pp.pprint(m)
         return m
 
     def to_cbor_bytes(self):
@@ -55,13 +58,13 @@ class Record(object):
 class Artefact(Record):
     @staticmethod
     def mediachain_type():
-        return "artefact"
+        return u'artefact'
 
 
 class Entity(Record):
     @staticmethod
     def mediachain_type():
-        return "entity"
+        return u'entity'
 
 
 class MultihashReference(object):
@@ -76,7 +79,7 @@ class MultihashReference(object):
         self.multihash = multihash
 
     def to_map(self):
-        return {'@link': self.multihash}
+        return {u'@link': self.multihash}
 
     def to_cbor_bytes(self):
         return cbor.dumps(self.to_map(), sort_keys=True)
@@ -91,11 +94,11 @@ class ChainCell(Record):
 
     @staticmethod
     def required_fields():
-        return super(ChainCell, ChainCell).required_fields() + ["ref"]
+        return super(ChainCell, ChainCell).required_fields() + [u'ref']
 
     @staticmethod
     def optional_fields():
-        return super(ChainCell, ChainCell).optional_fields() + ["chain"]
+        return super(ChainCell, ChainCell).optional_fields() + [u'chain']
 
     def __init__(self, meta, ref, chain=None):
         super(ChainCell, self).__init__(meta)
@@ -108,13 +111,13 @@ class ArtefactCreationCell(ChainCell):
 
     @staticmethod
     def mediachain_type():
-        return "artefactCreatedBy"
+        return u'artefactCreatedBy'
 
     @staticmethod
     def required_fields():
         super_fields = super(ArtefactCreationCell, ArtefactCreationCell)\
             .required_fields()
-        return super_fields + ["entity"]
+        return super_fields + [u'entity']
 
     def __init__(self, meta, ref, entity, chain=None):
         super(ArtefactCreationCell, self).__init__(meta, ref, chain)

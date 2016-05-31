@@ -7,7 +7,7 @@ from mediachain.datastore.dynamo import DynamoDatastore
 from mediachain.transactor import TransactorClient
 from datetime import datetime
 
-TRANSLATOR_ID = 'GettyTranslator/0.1'
+TRANSLATOR_ID = u'GettyTranslator/0.1'
 
 
 def ingest(host, port, dir_root, datastore_url=None, max_num=0):
@@ -21,26 +21,26 @@ def ingest(host, port, dir_root, datastore_url=None, max_num=0):
 
 
 def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
-    common_meta = {'rawRef': raw_ref.to_map(),
-                   'translatedAt': datetime.utcnow().isoformat(),
-                   'translator': TRANSLATOR_ID}
+    common_meta = {u'rawRef': raw_ref.to_map(),
+                   u'translatedAt': datetime.utcnow().isoformat(),
+                   u'translator': TRANSLATOR_ID}
 
     artist_name = getty_json['artist']
     if artist_name in entities:
         entity = entities[artist_name]
     else:
-        artist_meta = dict(common_meta, data={'name': artist_name})
+        artist_meta = dict(common_meta, data={u'name': artist_name})
         entity = Entity(artist_meta)
 
-    data = {'_id': 'getty_' + getty_json['id'],
-            'title': getty_json['title'],
-            'artist': getty_json['artist'],
-            'collection_name': getty_json['collection_name'],
-            'caption': getty_json['caption'],
-            'editorial_source': getty_json['editorial_source'].get('name', None),
-            'keywords':
+    data = {u'_id': u'getty_' + getty_json['id'],
+            u'title': getty_json['title'],
+            u'artist': getty_json['artist'],
+            u'collection_name': getty_json['collection_name'],
+            u'caption': getty_json['caption'],
+            u'editorial_source': getty_json['editorial_source'].get('name', None),
+            u'keywords':
                 [x['text'] for x in getty_json['keywords'] if 'text' in x],
-            'date_created': getty_json['date_created']
+            u'date_created': getty_json['date_created']
             }
 
     artefact_meta = dict(common_meta, data=data)
@@ -86,10 +86,10 @@ def dedup_artists(dd='getty/json/images',
 
     entities = {}
     for n, raw_ref_str in artist_name_map.iteritems():
-        meta = {'rawRef': MultihashReference.from_base58(raw_ref_str).to_map(),
-                'translatedAt': datetime.utcnow().isoformat(),
-                'translator': TRANSLATOR_ID,
-                'data': {'name': n}}
+        meta = {u'rawRef': MultihashReference.from_base58(raw_ref_str).to_map(),
+                u'translatedAt': datetime.utcnow().isoformat(),
+                u'translator': TRANSLATOR_ID,
+                u'data': {u'name': n}}
         entities[n] = Entity(meta)
     return entities
 
