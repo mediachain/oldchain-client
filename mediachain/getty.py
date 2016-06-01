@@ -31,10 +31,11 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
 
     artist_name = getty_json['artist']
     if artist_name in entities:
-        entity = entities[artist_name]
+        entity_ref = entities[artist_name]
     else:
         artist_meta = dict(common_meta, data={u'name': artist_name})
         entity = Entity(artist_meta)
+        entity_ref = transactor.insert(entity)
 
     data = {u'_id': u'getty_' + getty_json['id'],
             u'title': getty_json['title'],
@@ -50,22 +51,20 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
     artefact_meta = dict(common_meta, data=data)
     artefact = Artefact(artefact_meta)
 
-    entity_ref = transactor.insert(entity)
     artefact_ref = transactor.insert(artefact)
     creation_cell = ArtefactCreationCell(meta=common_meta,
                                          ref=artefact_ref,
                                          entity=entity_ref)
 
-    transactor.update(creation_cell)
-
-    return artefact, entity, creation_cell
+    cell_ref = transactor.update(creation_cell)
+    return artefact_ref, entity_ref, cell_ref
 
 
 def getty_artefacts(transactor,
                     dd='getty/json/images',
                     max_num=0,
                     datastore=DynamoDatastore()):
-    entities = dedup_artists(dd, max_num, datastore)
+    entities = dedup_artists(transactor, dd, max_num, datastore)
 
     for content, getty_json in walk_json_dir(dd, max_num):
         raw_ref_str = datastore.put(content)
@@ -75,7 +74,8 @@ def getty_artefacts(transactor,
         )
 
 
-def dedup_artists(dd='getty/json/images',
+def dedup_artists(transactor,
+                  dd='getty/json/images',
                   max_num=0,
                   datastore=DynamoDatastore()):
     print("deduplicating getty artists.  This may take a while...")
@@ -93,7 +93,13 @@ def dedup_artists(dd='getty/json/images',
                 u'translatedAt': unicode(datetime.utcnow().isoformat()),
                 u'translator': TRANSLATOR_ID,
                 u'data': {u'name': n}}
-        entities[n] = Entity(meta)
+        entity = Entity(meta)
+        try:
+            ref = transactor.insert(entity)
+            entities[n] = ref
+        except AbortionError as e:
+            print("RPC error inserting entity: " + str(e))
+
     return entities
 
 
