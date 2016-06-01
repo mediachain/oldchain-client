@@ -4,15 +4,18 @@ from mediachain.reader.transactor import get_chain_head
 import copy
 
 def get_object(host, port, object_id):
+    base = dynamo.get_object(object_id)
     head = get_chain_head(host, port, object_id)
     chain = get_object_chain(head)
-    obj = reduce(chain_folder, chain, dict())
+    obj = reduce(chain_folder, chain, base)
 
     try:
         entity_id = obj['entity']
         obj['entity'] = get_object(host, port, entity_id)
     except KeyError as e:
         pass
+
+    print(obj)
 
 def apply_update_cell(acc, cell):
     result = copy.deepcopy(acc)
