@@ -76,6 +76,9 @@ class MultihashReference(object):
     def __init__(self, multihash):
         self.multihash = multihash
 
+    def __str__(self):
+        return u'MultihashReference: ' + self.multihash_base58()
+
     def to_map(self):
         return {u'@link': self.multihash}
 
