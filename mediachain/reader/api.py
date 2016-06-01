@@ -19,16 +19,20 @@ def get_object(host, port, object_id):
 
 def apply_update_cell(acc, cell):
     result = copy.deepcopy(acc)
+    cell = copy.deepcopy(cell)
 
-    for k, v in cell['meta'].iteritems():
+    for attr in ['type', 'artefact', 'entity']:
+        del cell[attr]
+
+    for k, v in cell.iteritems():
         result[k] = v
 
     return result
 
 def apply_creation_cell(acc, update):
     result = copy.deepcopy(acc)
-    result['entity'] = update['entity']
 
+    result['entity'] = update['entity']
     return result
 
 def chain_folder(acc, x):
