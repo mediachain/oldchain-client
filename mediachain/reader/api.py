@@ -32,7 +32,11 @@ def apply_update_cell(acc, cell):
 def apply_creation_cell(acc, update):
     result = copy.deepcopy(acc)
 
-    result['entity'] = update['entity']
+    try:
+        result['entity'] = update['entity']
+    except KeyError as e:
+        pass
+
     return result
 
 def chain_folder(acc, x):
