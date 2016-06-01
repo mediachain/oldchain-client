@@ -6,6 +6,7 @@ from mediachain.data_objects import Artefact, Entity, ArtefactCreationCell, \
 from mediachain.datastore.dynamo import DynamoDatastore
 from mediachain.transactor import TransactorClient
 from datetime import datetime
+from grpc.framework.interfaces.face.face import AbortionError
 
 TRANSLATOR_ID = u'GettyTranslator/0.1'
 
@@ -14,10 +15,13 @@ def ingest(host, port, dir_root, datastore_url=None, max_num=0):
     transactor = TransactorClient(host, port)
     datastore = DynamoDatastore(endpoint_url=datastore_url)
 
-    for artefact, entity, cell in getty_artefacts(
-        transactor, dir_root, max_num, datastore
-    ):
-        print "Ingested artefact: " + str(artefact)
+    try:
+        for artefact, entity, cell in getty_artefacts(
+            transactor, dir_root, max_num, datastore
+        ):
+            print "Ingested artefact: " + str(artefact)
+    except AbortionError as e:
+        print("RPC Error: " + str(e))
 
 
 def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
@@ -46,7 +50,6 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
     artefact_meta = dict(common_meta, data=data)
     artefact = Artefact(artefact_meta)
 
-    # TODO: catch RPC errors here
     entity_ref = transactor.insert(entity)
     artefact_ref = transactor.insert(artefact)
     creation_cell = ArtefactCreationCell(meta=common_meta,
