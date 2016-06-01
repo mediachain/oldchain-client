@@ -30,16 +30,14 @@ class Record(object):
         m = {u'type': self.mediachain_type()}
 
         for f in self.required_fields():
-            val = self.__dict__[f]
-            if val is None:
+            if f not in self.__dict__:
                 raise Exception("Required field " + f +
                                 " is missing, cannot serialize")
-            m[f] = val
+            m[f] = self.__dict__[f]
 
         for f in self.optional_fields():
-            val = self.__dict__[f]
-            if val:
-                m[f] = val
+            if f in self.__dict__:
+                m[f] = self.__dict__[f]
 
         pp = pprint.PrettyPrinter(indent=2)
         pp.pprint(m)
@@ -102,8 +100,9 @@ class ChainCell(Record):
 
     def __init__(self, meta, ref, chain=None):
         super(ChainCell, self).__init__(meta)
-        self.ref = ref
-        self.chain = chain
+        self.ref = ref.to_map()
+        if chain is not None:
+            self.chain = chain.to_map()
 
 
 class ArtefactCreationCell(ChainCell):
@@ -121,6 +120,6 @@ class ArtefactCreationCell(ChainCell):
 
     def __init__(self, meta, ref, entity, chain=None):
         super(ArtefactCreationCell, self).__init__(meta, ref, chain)
-        self.entity = entity
+        self.entity = entity.to_map()
 
 
