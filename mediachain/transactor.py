@@ -26,10 +26,10 @@ class TransactorClient(object):
         assert_canonical(record)
         req = Transactor_pb2.InsertRequest(canonicalCbor=record.to_cbor_bytes())
         ref = self.client.InsertCanonicalRecord(req, TIMEOUT_SECS)
-        return MultihashReference.from_base58(ref.multihash)
+        return MultihashReference.from_base58(ref.reference)
 
     def update(self, cell):
         assert_chaincell(cell)
         req = Transactor_pb2.UpdateRequest(chainCellCbor=cell.to_cbor_bytes())
         ref = self.client.UpdateCanonicalRecord(req, TIMEOUT_SECS)
-        return MultihashReference.from_base58(ref.multihash)
+        return MultihashReference.from_base58(ref.reference)

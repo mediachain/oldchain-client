@@ -85,7 +85,7 @@ class MultihashReference(object):
         return cbor.dumps(self.to_map(), sort_keys=True)
 
     def multihash_base58(self):
-        return b58encode(str(self.multihash()))
+        return b58encode(str(self.multihash))
 
 
 class ChainCell(Record):
