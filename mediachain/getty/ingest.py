@@ -9,7 +9,7 @@ from grpc.framework.interfaces.face.face import AbortionError
 from mediachain.datastore.data_objects import Artefact, Entity, \
     ArtefactCreationCell, MultihashReference
 from mediachain.datastore.dynamo import DynamoDatastore
-from mediachain.transactor import TransactorClient
+from mediachain.transactor.client import TransactorClient
 
 TRANSLATOR_ID = u'GettyTranslator/0.1'
 
