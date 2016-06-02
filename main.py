@@ -21,10 +21,9 @@ def main(arguments=None):
                         required=True,
                         dest='port')
 
-    # FIXME: this should be optional with a sensible default
     parser.add_argument('-d', '--datastore_url',
                         type=str,
-                        required=True,
+                        required=False,
                         dest='datastore_url')
 
     subparsers = parser.add_subparsers(help='Mediachain writer subcommands',
