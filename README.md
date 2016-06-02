@@ -17,7 +17,7 @@ an install of [dynamo local][dynamo-local] with a local mediachain transactor.
 You can invoke the importer like so:
 ```
 pip install -r requirements.txt
-python main.py -s <mediachain-rpc-host> -p <mediachain-rpc-port> ingest <getty-json-dir>
+python -m mediachain.getty.main -s <mediachain-rpc-host> -p <mediachain-rpc-port> ingest <getty-json-dir>
 ```
 
 If you're using a local dynamo db for testing, you should also pass
