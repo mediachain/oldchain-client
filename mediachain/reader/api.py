@@ -4,15 +4,15 @@ from mediachain.reader.transactor import get_chain_head
 import copy
 import base58
 
-def get_object(host, port, object_id):
-    base = dynamo.get_object(object_id)
+def get_object(host, port, object_id, aws_config):
+    base = dynamo.get_object(object_id, aws_config)
     head = get_chain_head(host, port, object_id)
-    chain = get_object_chain(head)
+    chain = get_object_chain(head, [], aws_config)
     obj = reduce(chain_folder, chain, base)
 
     try:
         entity_id = obj['entity']
-        obj['entity'] = get_object(host, port, entity_id)
+        obj['entity'] = get_object(host, port, entity_id, aws_config)
     except KeyError as e:
         pass
 
@@ -53,11 +53,11 @@ def chain_folder(acc, x):
         # otherwise, skip
         return acc
 
-def get_object_chain(reference, acc=[]):
+def get_object_chain(reference, acc, aws_config):
     if reference is None:
         return acc
 
-    obj = dynamo.get_object(reference)
+    obj = dynamo.get_object(reference, aws_config)
 
     try:
         next_ref = obj['chain']['@link']
@@ -65,4 +65,4 @@ def get_object_chain(reference, acc=[]):
     except KeyError as e:
         next_ref = None
 
-    return get_object_chain(next_ref, acc + [obj])
+    return get_object_chain(next_ref, acc + [obj], aws_config)

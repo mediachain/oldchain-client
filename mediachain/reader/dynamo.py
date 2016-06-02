@@ -1,16 +1,12 @@
 import boto3
 import cbor
 
-def get_table(name):
-    dynamo = boto3.resource('dynamodb',
-                            endpoint_url='http://localhost:8000',
-                            region_name='us-east-1',
-                            aws_access_key_id='',
-                            aws_secret_access_key='')
+def get_table(name, aws_config):
+    dynamo = boto3.resource('dynamodb', **aws_config)
     return dynamo.Table(name)
 
-def get_object(reference):
-    table = get_table('Mediachain')
+def get_object(reference, aws_config):
+    table = get_table('Mediachain', aws_config)
     obj = table.get_item(Key={'multihash': reference})
 
     if obj is None:
