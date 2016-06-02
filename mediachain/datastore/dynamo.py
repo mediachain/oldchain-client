@@ -1,9 +1,10 @@
 import boto3
-from boto3.dynamodb.types import Binary
 import cbor
-from mediachain.data_objects import Record, MultihashReference
-from multihash import encode as multihash_encode, SHA2_256
 from base58 import b58encode
+from boto3.dynamodb.types import Binary
+from multihash import encode as multihash_encode, SHA2_256
+
+from mediachain.datastore.data_objects import Record, MultihashReference
 
 
 class DynamoDatastore(object):
