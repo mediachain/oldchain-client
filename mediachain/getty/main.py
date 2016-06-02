@@ -1,6 +1,6 @@
 import sys
 import argparse
-from mediachain import getty
+from mediachain.getty.ingest import ingest
 
 
 def main(arguments=None):
@@ -45,7 +45,7 @@ def main(arguments=None):
 
     subcommands = {
         'ingest': lambda ns:
-            getty.ingest(ns.host, ns.port, ns.dir, ns.datastore_url, ns.max_num)
+            ingest(ns.host, ns.port, ns.dir, ns.datastore_url, ns.max_num)
     }
 
     ns = parser.parse_args(arguments)

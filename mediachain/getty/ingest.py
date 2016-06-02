@@ -1,13 +1,15 @@
 import json
 import sys
+from datetime import datetime
 from os import walk
 from os.path import join
-from mediachain.data_objects import Artefact, Entity, ArtefactCreationCell, \
-    MultihashReference
-from mediachain.datastore.dynamo import DynamoDatastore
-from mediachain.transactor import TransactorClient
-from datetime import datetime
+
 from grpc.framework.interfaces.face.face import AbortionError
+
+from mediachain.datastore.data_objects import Artefact, Entity, \
+    ArtefactCreationCell, MultihashReference
+from mediachain.datastore.dynamo import DynamoDatastore
+from mediachain.transactor.client import TransactorClient
 
 TRANSLATOR_ID = u'GettyTranslator/0.1'
 
