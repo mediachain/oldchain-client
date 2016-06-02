@@ -7,7 +7,7 @@ from base58 import b58encode
 
 
 class DynamoDatastore(object):
-    def __init__(self, mediachain_table_name='mediachain', **kwargs):
+    def __init__(self, mediachain_table_name='Mediachain', **kwargs):
         self.mediachain_table_name = mediachain_table_name
         self.dynamo = boto3.resource('dynamodb', **kwargs)
 
