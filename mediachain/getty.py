@@ -1,4 +1,5 @@
 import json
+import sys
 from os import walk
 from os.path import join
 from mediachain.data_objects import Artefact, Entity, ArtefactCreationCell, \
@@ -16,10 +17,13 @@ def ingest(host, port, dir_root, datastore_url=None, max_num=0):
     datastore = DynamoDatastore(endpoint_url=datastore_url)
 
     try:
-        for artefact, entity, cell in getty_artefacts(
+        for artefact, artefact_ref, entity_ref, cell_ref in getty_artefacts(
             transactor, dir_root, max_num, datastore
         ):
-            print "Ingested artefact: " + str(artefact)
+            getty_id = artefact.meta[u'data'][u'_id']
+            print "Ingested getty image '{0}' {1}".format(
+                getty_id, artefact_ref
+            )
     except AbortionError as e:
         print("RPC Error: " + str(e))
 
@@ -57,7 +61,7 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
                                          entity=entity_ref)
 
     cell_ref = transactor.update(creation_cell)
-    return artefact_ref, entity_ref, cell_ref
+    return artefact, artefact_ref, entity_ref, cell_ref
 
 
 def getty_artefacts(transactor,
@@ -80,12 +84,22 @@ def dedup_artists(transactor,
                   datastore=DynamoDatastore()):
     print("deduplicating getty artists.  This may take a while...")
     artist_name_map = {}
+    total_parsed = 0
+    unique = 0
     for content, getty_json in walk_json_dir(dd, max_num):
-        raw_ref_str = datastore.put(content)
+        total_parsed += 1
         n = getty_json['artist']
         if n is None or n in artist_name_map:
             continue
+        unique += 1
+        raw_ref_str = datastore.put(content)
         artist_name_map[n] = raw_ref_str
+
+        sys.stdout.write('\r')
+        sys.stdout.write('Parsed {0} entries, {1} unique artists'.format(
+            total_parsed, unique
+        ))
+        sys.stdout.flush()
 
     entities = {}
     for n, raw_ref_str in artist_name_map.iteritems():
@@ -100,6 +114,7 @@ def dedup_artists(transactor,
         except AbortionError as e:
             print("RPC error inserting entity: " + str(e))
 
+    print('\ndone deduplicating artists')
     return entities
 
 

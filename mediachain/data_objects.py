@@ -39,8 +39,6 @@ class Record(object):
             if f in self.__dict__:
                 m[f] = self.__dict__[f]
 
-        pp = pprint.PrettyPrinter(indent=2)
-        pp.pprint(m)
         return m
 
     def to_cbor_bytes(self):
