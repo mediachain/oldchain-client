@@ -2,6 +2,7 @@ import cbor
 from mediachain.reader import dynamo
 from mediachain.reader.transactor import get_chain_head
 import copy
+import base58
 
 def get_object(host, port, object_id):
     base = dynamo.get_object(object_id)
@@ -21,11 +22,8 @@ def apply_update_cell(acc, cell):
     result = copy.deepcopy(acc)
     cell = copy.deepcopy(cell)
 
-    for attr in ['type', 'artefact', 'entity']:
-        del cell[attr]
-
-    for k, v in cell.iteritems():
-        result[k] = v
+    for k, v in cell['meta'].iteritems():
+        result['meta'][k] = v
 
     return result
 
@@ -43,9 +41,9 @@ def chain_folder(acc, x):
     cell_type = x.get('type')
 
     fn_map = {
-        'artefactCreationCell': apply_creation_cell,
-        'artefactUpdateCell': apply_update_cell,
-        'entityUpdateCell': apply_update_cell
+        u'artefactCreation': apply_creation_cell,
+        u'artefactUpdate': apply_update_cell,
+        u'entityUpdate': apply_update_cell
     }
 
     try:
@@ -60,6 +58,11 @@ def get_object_chain(reference, acc=[]):
         return acc
 
     obj = dynamo.get_object(reference)
-    next_ref = obj.get('chain')
+
+    try:
+        next_ref = obj['chain']['@link']
+        next_ref = base58.b58encode(next_ref)
+    except KeyError as e:
+        next_ref = None
 
     return get_object_chain(next_ref, acc + [obj])
