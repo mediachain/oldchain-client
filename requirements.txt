@@ -6,6 +6,7 @@ enum34==1.1.6
 futures==3.0.5
 grpcio==0.14.0
 jmespath==0.9.0
+-e git+https://github.com/yusefnapora/python-multihash.git@93b14b4fce9b9721955b837c648f467ac2cf3d22#egg=multihash
 protobuf==3.0.0b3
 python-dateutil==2.5.3
 six==1.10.0
