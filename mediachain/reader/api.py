@@ -10,7 +10,7 @@ def get_and_print_object(host, port, object_id):
     obj = get_object(host, port, object_id)
     pp = PrettyPrinter(indent=2)
     pp.pprint(obj)
-    
+
 
 def get_object(host, port, object_id):
     db = get_db()
