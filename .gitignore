@@ -57,3 +57,7 @@ coverage.xml
 #Ipython Notebook
 .ipynb_checkpoints
 
+# gRPC
+protobuf/
+proto/*.py
+!proto/__init__.py

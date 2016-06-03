@@ -1,6 +1,7 @@
 import sys
 import argparse
 import os
+from pprint import PrettyPrinter
 from mediachain.reader import api
 from mediachain.datastore.dynamo import set_aws_config
 
@@ -79,6 +80,7 @@ def main(arguments=None):
                 pass
 
         set_aws_config(aws)
+        api.get_object(ns.host, ns.port, ns.object_id, aws)
 
     configure_aws(ns)
     fn(ns)

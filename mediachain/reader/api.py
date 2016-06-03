@@ -17,7 +17,7 @@ def get_object(host, port, object_id):
     except KeyError as e:
         pass
 
-    print(obj)
+    return obj
 
 def apply_update_cell(acc, cell):
     result = copy.deepcopy(acc)
@@ -32,7 +32,7 @@ def apply_creation_cell(acc, update):
     result = copy.deepcopy(acc)
 
     try:
-        result['entity'] = update['entity']
+        result['entity'] = base58.b58encode(update['entity']['@link'])
     except KeyError as e:
         pass
 
@@ -42,7 +42,7 @@ def chain_folder(acc, x):
     cell_type = x.get('type')
 
     fn_map = {
-        u'artefactCreation': apply_creation_cell,
+        u'artefactCreatedBy': apply_creation_cell,
         u'artefactUpdate': apply_update_cell,
         u'entityUpdate': apply_update_cell
     }
