@@ -31,7 +31,7 @@ def apply_creation_cell(acc, update):
     result = copy.deepcopy(acc)
 
     try:
-        result['entity'] = update['entity']
+        result['entity'] = base58.b58encode(update['entity']['@link'])
     except KeyError as e:
         pass
 
