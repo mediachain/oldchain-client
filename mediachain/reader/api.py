@@ -41,7 +41,7 @@ def chain_folder(acc, x):
     cell_type = x.get('type')
 
     fn_map = {
-        u'artefactCreation': apply_creation_cell,
+        u'artefactCreatedBy': apply_creation_cell,
         u'artefactUpdate': apply_update_cell,
         u'entityUpdate': apply_update_cell
     }
