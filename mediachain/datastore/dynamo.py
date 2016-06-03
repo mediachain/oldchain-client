@@ -7,18 +7,21 @@ from multihash import encode as multihash_encode, SHA2_256
 
 from mediachain.datastore.data_objects import Record, MultihashReference
 
-AWS_CONFIG={
+__AWS_CONFIG={
     'mediachain_table_name': 'Mediachain'
 }
 __DB_INSTANCE=None
 
 def set_aws_config(cfg):
-    global AWS_CONFIG
-    AWS_CONFIG = cfg
+    global __AWS_CONFIG
+    __AWS_CONFIG.update(cfg)
+
+def get_aws_config():
+    global __AWS_CONFIG
+    return __AWS_CONFIG
 
 def get_db():
     global __DB_INSTANCE
-
     if __DB_INSTANCE is None:
         __DB_INSTANCE = DynamoDatastore()
 
@@ -26,7 +29,7 @@ def get_db():
 
 class DynamoDatastore(object):
     def __init__(self, **kwargs):
-        cfg = copy.deepcopy(AWS_CONFIG)
+        cfg = copy.deepcopy(get_aws_config())
         cfg.update(kwargs)
         self.mediachain_table_name = cfg.pop('mediachain_table_name')
         self.dynamo = boto3.resource('dynamodb', **cfg)
