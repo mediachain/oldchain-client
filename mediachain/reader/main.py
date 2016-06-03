@@ -2,6 +2,7 @@ import sys
 import argparse
 import os
 from mediachain.reader import api
+from mediachain.datastore.dynamo import set_aws_config
 
 def main(arguments=None):
     if arguments == None:
@@ -55,12 +56,20 @@ def main(arguments=None):
                             type=str,
                             help='The id of the artefact/entity to fetch')
 
-    def get_object(ns):
+    SUBCOMMANDS={
+        'get': lambda ns: api.get_object(ns.host, ns.port, ns.object_id)
+    }
+
+    ns = parser.parse_args(arguments)
+    fn = SUBCOMMANDS[ns.subcommand]
+
+    def configure_aws(ns):
+        # aws configuration
         aws = dict()
         attrs = ['aws_access_key_id',
-                 'aws_secret_access_key',
-                 'endpoint_url',
-                 'region_name']
+                'aws_secret_access_key',
+                'endpoint_url',
+                'region_name']
 
         # filter unpopulated
         for attr in attrs:
@@ -69,14 +78,9 @@ def main(arguments=None):
             except AttributeError as e:
                 pass
 
-        api.get_object(ns.host, ns.port, ns.object_id, aws)
+        set_aws_config(aws)
 
-    SUBCOMMANDS={
-        'get': get_object
-    }
-
-    ns = parser.parse_args(arguments)
-    fn = SUBCOMMANDS[ns.subcommand]
+    configure_aws(ns)
     fn(ns)
 
 if __name__ == "__main__":
