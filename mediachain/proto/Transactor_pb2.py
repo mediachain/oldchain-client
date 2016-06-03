@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='Transactor.proto',
   package='protocol',
   syntax='proto3',
-  serialized_pb=_b('\n\x10Transactor.proto\x12\x08protocol\"\'\n\x12MultihashReference\x12\x11\n\treference\x18\x01 \x01(\t2g\n\x11TransactorService\x12R\n\x14\x46\x65tchObjectChainHead\x12\x1c.protocol.MultihashReference\x1a\x1c.protocol.MultihashReferenceB#\n!io.mediachain.protocol.transactorb\x06proto3')
+  serialized_pb=_b('\n\x10Transactor.proto\x12\x08protocol\"\'\n\x12MultihashReference\x12\x11\n\treference\x18\x01 \x01(\t\"&\n\rInsertRequest\x12\x15\n\rcanonicalCbor\x18\x01 \x01(\x0c\"&\n\rUpdateRequest\x12\x15\n\rchainCellCbor\x18\x01 \x01(\x0c\x32\xee\x01\n\x11TransactorService\x12H\n\x0fInsertCanonical\x12\x17.protocol.InsertRequest\x1a\x1c.protocol.MultihashReference\x12\x44\n\x0bUpdateChain\x12\x17.protocol.UpdateRequest\x1a\x1c.protocol.MultihashReference\x12I\n\x0bLookupChain\x12\x1c.protocol.MultihashReference\x1a\x1c.protocol.MultihashReferenceB#\n!io.mediachain.protocol.transactorb\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -56,7 +56,71 @@ _MULTIHASHREFERENCE = _descriptor.Descriptor(
   serialized_end=69,
 )
 
+
+_INSERTREQUEST = _descriptor.Descriptor(
+  name='InsertRequest',
+  full_name='protocol.InsertRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='canonicalCbor', full_name='protocol.InsertRequest.canonicalCbor', index=0,
+      number=1, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=71,
+  serialized_end=109,
+)
+
+
+_UPDATEREQUEST = _descriptor.Descriptor(
+  name='UpdateRequest',
+  full_name='protocol.UpdateRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='chainCellCbor', full_name='protocol.UpdateRequest.chainCellCbor', index=0,
+      number=1, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=111,
+  serialized_end=149,
+)
+
 DESCRIPTOR.message_types_by_name['MultihashReference'] = _MULTIHASHREFERENCE
+DESCRIPTOR.message_types_by_name['InsertRequest'] = _INSERTREQUEST
+DESCRIPTOR.message_types_by_name['UpdateRequest'] = _UPDATEREQUEST
 
 MultihashReference = _reflection.GeneratedProtocolMessageType('MultihashReference', (_message.Message,), dict(
   DESCRIPTOR = _MULTIHASHREFERENCE,
@@ -65,40 +129,77 @@ MultihashReference = _reflection.GeneratedProtocolMessageType('MultihashReferenc
   ))
 _sym_db.RegisterMessage(MultihashReference)
 
+InsertRequest = _reflection.GeneratedProtocolMessageType('InsertRequest', (_message.Message,), dict(
+  DESCRIPTOR = _INSERTREQUEST,
+  __module__ = 'Transactor_pb2'
+  # @@protoc_insertion_point(class_scope:protocol.InsertRequest)
+  ))
+_sym_db.RegisterMessage(InsertRequest)
+
+UpdateRequest = _reflection.GeneratedProtocolMessageType('UpdateRequest', (_message.Message,), dict(
+  DESCRIPTOR = _UPDATEREQUEST,
+  __module__ = 'Transactor_pb2'
+  # @@protoc_insertion_point(class_scope:protocol.UpdateRequest)
+  ))
+_sym_db.RegisterMessage(UpdateRequest)
+
 
 DESCRIPTOR.has_options = True
 DESCRIPTOR._options = _descriptor._ParseOptions(descriptor_pb2.FileOptions(), _b('\n!io.mediachain.protocol.transactor'))
 import abc
+import six
 from grpc.beta import implementations as beta_implementations
 from grpc.framework.common import cardinality
 from grpc.framework.interfaces.face import utilities as face_utilities
 
-class BetaTransactorServiceServicer(object):
+class BetaTransactorServiceServicer(six.with_metaclass(abc.ABCMeta, object)):
   """<fill me in later!>"""
-  __metaclass__ = abc.ABCMeta
   @abc.abstractmethod
-  def FetchObjectChainHead(self, request, context):
+  def InsertCanonical(self, request, context):
+    raise NotImplementedError()
+  @abc.abstractmethod
+  def UpdateChain(self, request, context):
+    raise NotImplementedError()
+  @abc.abstractmethod
+  def LookupChain(self, request, context):
     raise NotImplementedError()
 
-class BetaTransactorServiceStub(object):
+class BetaTransactorServiceStub(six.with_metaclass(abc.ABCMeta, object)):
   """The interface to which stubs will conform."""
-  __metaclass__ = abc.ABCMeta
   @abc.abstractmethod
-  def FetchObjectChainHead(self, request, timeout):
+  def InsertCanonical(self, request, timeout):
     raise NotImplementedError()
-  FetchObjectChainHead.future = None
+  InsertCanonical.future = None
+  @abc.abstractmethod
+  def UpdateChain(self, request, timeout):
+    raise NotImplementedError()
+  UpdateChain.future = None
+  @abc.abstractmethod
+  def LookupChain(self, request, timeout):
+    raise NotImplementedError()
+  LookupChain.future = None
 
 def beta_create_TransactorService_server(servicer, pool=None, pool_size=None, default_timeout=None, maximum_timeout=None):
   import Transactor_pb2
   import Transactor_pb2
+  import Transactor_pb2
+  import Transactor_pb2
+  import Transactor_pb2
+  import Transactor_pb2
   request_deserializers = {
-    ('protocol.TransactorService', 'FetchObjectChainHead'): Transactor_pb2.MultihashReference.FromString,
+    ('protocol.TransactorService', 'InsertCanonical'): Transactor_pb2.InsertRequest.FromString,
+    ('protocol.TransactorService', 'LookupChain'): Transactor_pb2.MultihashReference.FromString,
+    ('protocol.TransactorService', 'UpdateChain'): Transactor_pb2.UpdateRequest.FromString,
   }
   response_serializers = {
-    ('protocol.TransactorService', 'FetchObjectChainHead'): Transactor_pb2.MultihashReference.SerializeToString,
+    ('protocol.TransactorService', 'InsertCanonical'): Transactor_pb2.MultihashReference.SerializeToString,
+    ('protocol.TransactorService', 'LookupChain'): Transactor_pb2.MultihashReference.SerializeToString,
+    ('protocol.TransactorService', 'UpdateChain'): Transactor_pb2.MultihashReference.SerializeToString,
   }
   method_implementations = {
-    ('protocol.TransactorService', 'FetchObjectChainHead'): face_utilities.unary_unary_inline(servicer.FetchObjectChainHead),
+    ('protocol.TransactorService', 'InsertCanonical'): face_utilities.unary_unary_inline(servicer.InsertCanonical),
+    ('protocol.TransactorService', 'LookupChain'): face_utilities.unary_unary_inline(servicer.LookupChain),
+    ('protocol.TransactorService', 'UpdateChain'): face_utilities.unary_unary_inline(servicer.UpdateChain),
   }
   server_options = beta_implementations.server_options(request_deserializers=request_deserializers, response_serializers=response_serializers, thread_pool=pool, thread_pool_size=pool_size, default_timeout=default_timeout, maximum_timeout=maximum_timeout)
   return beta_implementations.server(method_implementations, options=server_options)
@@ -106,14 +207,24 @@ def beta_create_TransactorService_server(servicer, pool=None, pool_size=None, de
 def beta_create_TransactorService_stub(channel, host=None, metadata_transformer=None, pool=None, pool_size=None):
   import Transactor_pb2
   import Transactor_pb2
+  import Transactor_pb2
+  import Transactor_pb2
+  import Transactor_pb2
+  import Transactor_pb2
   request_serializers = {
-    ('protocol.TransactorService', 'FetchObjectChainHead'): Transactor_pb2.MultihashReference.SerializeToString,
+    ('protocol.TransactorService', 'InsertCanonical'): Transactor_pb2.InsertRequest.SerializeToString,
+    ('protocol.TransactorService', 'LookupChain'): Transactor_pb2.MultihashReference.SerializeToString,
+    ('protocol.TransactorService', 'UpdateChain'): Transactor_pb2.UpdateRequest.SerializeToString,
   }
   response_deserializers = {
-    ('protocol.TransactorService', 'FetchObjectChainHead'): Transactor_pb2.MultihashReference.FromString,
+    ('protocol.TransactorService', 'InsertCanonical'): Transactor_pb2.MultihashReference.FromString,
+    ('protocol.TransactorService', 'LookupChain'): Transactor_pb2.MultihashReference.FromString,
+    ('protocol.TransactorService', 'UpdateChain'): Transactor_pb2.MultihashReference.FromString,
   }
   cardinalities = {
-    'FetchObjectChainHead': cardinality.Cardinality.UNARY_UNARY,
+    'InsertCanonical': cardinality.Cardinality.UNARY_UNARY,
+    'LookupChain': cardinality.Cardinality.UNARY_UNARY,
+    'UpdateChain': cardinality.Cardinality.UNARY_UNARY,
   }
   stub_options = beta_implementations.stub_options(host=host, metadata_transformer=metadata_transformer, request_serializers=request_serializers, response_deserializers=response_deserializers, thread_pool=pool, thread_pool_size=pool_size)
   return beta_implementations.dynamic_stub(channel, 'protocol.TransactorService', cardinalities, options=stub_options)
