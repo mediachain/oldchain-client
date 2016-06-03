@@ -41,7 +41,7 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
     else:
         artist_meta = dict(common_meta, data={u'name': artist_name})
         entity = Entity(artist_meta)
-        entity_ref = transactor.insert(entity)
+        entity_ref = transactor.insert_canonical(entity)
 
     data = {u'_id': u'getty_' + getty_json['id'],
             u'title': getty_json['title'],
@@ -57,12 +57,12 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
     artefact_meta = dict(common_meta, data=data)
     artefact = Artefact(artefact_meta)
 
-    artefact_ref = transactor.insert(artefact)
+    artefact_ref = transactor.insert_canonical(artefact)
     creation_cell = ArtefactCreationCell(meta=common_meta,
                                          ref=artefact_ref,
                                          entity=entity_ref)
 
-    cell_ref = transactor.update(creation_cell)
+    cell_ref = transactor.update_chain(creation_cell)
     return artefact, artefact_ref, entity_ref, cell_ref
 
 
@@ -111,7 +111,7 @@ def dedup_artists(transactor,
                 u'data': {u'name': n}}
         entity = Entity(meta)
         try:
-            ref = transactor.insert(entity)
+            ref = transactor.insert_canonical(entity)
             entities[n] = ref
         except AbortionError as e:
             print("RPC error inserting entity: " + str(e))
