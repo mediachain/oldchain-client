@@ -23,14 +23,14 @@ class TransactorClient(object):
         channel = implementations.insecure_channel(host, port)
         self.client = Transactor_pb2.beta_create_TransactorService_stub(channel)
 
-    def insert(self, record):
+    def insert_canonical(self, record, timeout=TIMEOUT_SECS):
         assert_canonical(record)
         req = Transactor_pb2.InsertRequest(canonicalCbor=record.to_cbor_bytes())
-        ref = self.client.InsertCanonicalRecord(req, TIMEOUT_SECS)
+        ref = self.client.InsertCanonical(req, timeout)
         return MultihashReference.from_base58(ref.reference)
 
-    def update(self, cell):
+    def update_chain(self, cell, timeout=TIMEOUT_SECS):
         assert_chaincell(cell)
         req = Transactor_pb2.UpdateRequest(chainCellCbor=cell.to_cbor_bytes())
-        ref = self.client.UpdateCanonicalRecord(req, TIMEOUT_SECS)
+        ref = self.client.UpdateChain(req, timeout)
         return MultihashReference.from_base58(ref.reference)

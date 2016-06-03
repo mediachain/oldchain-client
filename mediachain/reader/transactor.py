@@ -13,7 +13,7 @@ def get_chain_head(host, port, object_id):
     client = get_client(host, port)
     request = Transactor_pb2.MultihashReference(reference=object_id)
     try:
-        chain_head = client.FetchObjectChainHead(request, TIMEOUT_SECS).reference
+        chain_head = client.LookupChain(request, TIMEOUT_SECS).reference
     except NetworkError as e:
         chain_head = None
     return chain_head
