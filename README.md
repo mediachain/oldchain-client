@@ -14,6 +14,8 @@ pip install .
 TODO
 
 ### Writing
+A "black box" translator for the Getty Images dataset is currently supported.
+
 This client walks a directory containing JSON metadata obtained from the
 Getty images API.  It connects via [gRPC][grpc] to a mediachain service, 
 which in turn communicates with a mediachain transactor cluster.  This
