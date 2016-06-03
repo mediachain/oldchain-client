@@ -59,4 +59,5 @@ coverage.xml
 
 # gRPC
 protobuf/
-protos/
+proto/*.py
+!proto/__init__.py
