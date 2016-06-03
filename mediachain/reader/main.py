@@ -1,6 +1,7 @@
 import sys
 import argparse
 import os
+from pprint import PrettyPrinter
 from mediachain.reader import api
 
 def main(arguments=None):
@@ -69,7 +70,9 @@ def main(arguments=None):
             except AttributeError as e:
                 pass
 
-        api.get_object(ns.host, ns.port, ns.object_id, aws)
+        obj = api.get_object(ns.host, ns.port, ns.object_id, aws)
+        pp = PrettyPrinter(indent=2)
+        pp.pprint(obj)
 
     SUBCOMMANDS={
         'get': get_object

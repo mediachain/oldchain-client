@@ -16,7 +16,7 @@ def get_object(host, port, object_id, aws_config):
     except KeyError as e:
         pass
 
-    print(obj)
+    return obj
 
 def apply_update_cell(acc, cell):
     result = copy.deepcopy(acc)
