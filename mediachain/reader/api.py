@@ -3,6 +3,14 @@ from mediachain.datastore.dynamo import get_db
 from mediachain.reader.transactor import get_chain_head
 import copy
 import base58
+from pprint import PrettyPrinter
+
+
+def get_and_print_object(host, port, object_id):
+    obj = get_object(host, port, object_id)
+    pp = PrettyPrinter(indent=2)
+    pp.pprint(obj)
+    
 
 def get_object(host, port, object_id):
     db = get_db()

@@ -96,7 +96,7 @@ def main(arguments=None):
                                default=0)
 
     SUBCOMMANDS={
-        'get': lambda ns: api.get_object(ns.host, ns.port, ns.object_id),
+        'get': lambda ns: api.get_and_print_object(ns.host, ns.port, ns.object_id),
         'ingest': lambda ns: ingest.ingest(ns.host, ns.port, ns.dir, ns.max_num)
     }
 
