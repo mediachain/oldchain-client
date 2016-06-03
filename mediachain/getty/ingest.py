@@ -1,5 +1,6 @@
 import json
 import sys
+from copy import deepcopy
 from datetime import datetime
 from os import walk
 from os.path import join
@@ -39,7 +40,8 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
     if artist_name in entities:
         entity_ref = entities[artist_name]
     else:
-        artist_meta = dict(common_meta, data={u'name': artist_name})
+        artist_meta = deepcopy(common_meta)
+        artist_meta.update({u'data': {u'name': artist_name}})
         entity = Entity(artist_meta)
         entity_ref = transactor.insert_canonical(entity)
 
@@ -53,8 +55,9 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
                 [x['text'] for x in getty_json['keywords'] if 'text' in x],
             u'date_created': getty_json['date_created']
             }
+    artefact_meta = deepcopy(common_meta)
+    artefact_meta.update({u'data': data})
 
-    artefact_meta = dict(common_meta, data=data)
     artefact = Artefact(artefact_meta)
 
     artefact_ref = transactor.insert_canonical(artefact)
