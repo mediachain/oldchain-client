@@ -7,14 +7,12 @@ from multihash import encode as multihash_encode, SHA2_256
 
 from mediachain.datastore.data_objects import Record, MultihashReference
 
-__AWS_CONFIG={
-    'mediachain_table_name': 'Mediachain'
-}
+__AWS_CONFIG=dict()
 __DB_INSTANCE=None
 
 def set_aws_config(cfg):
     global __AWS_CONFIG
-    __AWS_CONFIG.update(cfg)
+    __AWS_CONFIG = cfg
 
 def get_aws_config():
     global __AWS_CONFIG
