@@ -1,16 +1,36 @@
 import boto3
 import cbor
+import copy
 from base58 import b58encode
 from boto3.dynamodb.types import Binary
 from multihash import encode as multihash_encode, SHA2_256
 
 from mediachain.datastore.data_objects import Record, MultihashReference
 
+__AWS_CONFIG=dict()
+__DB_INSTANCE=None
+
+def set_aws_config(cfg):
+    global __AWS_CONFIG
+    __AWS_CONFIG = cfg
+
+def get_aws_config():
+    global __AWS_CONFIG
+    return __AWS_CONFIG
+
+def get_db():
+    global __DB_INSTANCE
+    if __DB_INSTANCE is None:
+        __DB_INSTANCE = DynamoDatastore()
+
+    return __DB_INSTANCE
 
 class DynamoDatastore(object):
-    def __init__(self, mediachain_table_name='Mediachain', **kwargs):
-        self.mediachain_table_name = mediachain_table_name
-        self.dynamo = boto3.resource('dynamodb', **kwargs)
+    def __init__(self, **kwargs):
+        cfg = copy.deepcopy(get_aws_config())
+        cfg.update(kwargs)
+        self.mediachain_table_name = cfg.pop('mediachain_table_name')
+        self.dynamo = boto3.resource('dynamodb', **cfg)
 
     def get_table(self, name):
         return self.dynamo.Table(name)

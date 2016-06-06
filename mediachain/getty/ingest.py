@@ -9,19 +9,19 @@ from grpc.framework.interfaces.face.face import AbortionError
 
 from mediachain.datastore.data_objects import Artefact, Entity, \
     ArtefactCreationCell, MultihashReference
-from mediachain.datastore.dynamo import DynamoDatastore
+from mediachain.datastore.dynamo import get_db
 from mediachain.transactor.client import TransactorClient
 
 TRANSLATOR_ID = u'GettyTranslator/0.1'
 
 
-def ingest(host, port, dir_root, datastore_url=None, max_num=0):
+def ingest(host, port, dir_root, max_num=0):
     transactor = TransactorClient(host, port)
-    datastore = DynamoDatastore(endpoint_url=datastore_url)
+    datastore = get_db()
 
     try:
         for artefact, artefact_ref, entity_ref, cell_ref in getty_artefacts(
-            transactor, dir_root, max_num, datastore
+            transactor, datastore, dir_root, max_num
         ):
             getty_id = artefact.meta[u'data'][u'_id']
             print "Ingested getty image '{0}' {1}".format(
@@ -70,10 +70,10 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
 
 
 def getty_artefacts(transactor,
+                    datastore,
                     dd='getty/json/images',
-                    max_num=0,
-                    datastore=DynamoDatastore()):
-    entities = dedup_artists(transactor, dd, max_num, datastore)
+                    max_num=0):
+    entities = dedup_artists(transactor, datastore, dd, max_num)
 
     for content, getty_json in walk_json_dir(dd, max_num):
         raw_ref_str = datastore.put(content)
@@ -84,9 +84,9 @@ def getty_artefacts(transactor,
 
 
 def dedup_artists(transactor,
+                  datastore,
                   dd='getty/json/images',
-                  max_num=0,
-                  datastore=DynamoDatastore()):
+                  max_num=0):
     print("deduplicating getty artists.  This may take a while...")
     artist_name_map = {}
     total_parsed = 0

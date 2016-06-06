@@ -11,13 +11,13 @@ with open(reqs_file) as f:
 
 setup(
     version='0.1.0',
-    name='mediachain-reader',
+    name='mediachain-cli',
     description='mediachain reader command line interface',
     author='Mediachain Labs',
     packages=find_packages('.'),
     entry_points={
         'console_scripts': [
-            'mediachain-reader = mediachain.reader.main:main'
+            'mediachain = mediachain.cli.main:main'
         ]
     },
     url='http://mediachain.io',
