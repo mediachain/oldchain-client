@@ -34,3 +34,15 @@ class TransactorClient(object):
         req = Transactor_pb2.UpdateRequest(chainCellCbor=cell.to_cbor_bytes())
         ref = self.client.UpdateChain(req, timeout)
         return MultihashReference.from_base58(ref.reference)
+
+    def journal_stream(self, last_block_ref=None, timeout=TIMEOUT_SECS):
+        if isinstance(last_block_ref, MultihashReference):
+            last_block_ref = Transactor_pb2.MultihashReference(
+                reference=last_block_ref.multihash_base58())
+        elif last_block_ref is not None:
+            last_block_ref = Transactor_pb2.MultihashReference(
+                reference=last_block_ref)
+
+        req = Transactor_pb2.JournalStreamRequest(
+            lastJournalBlock=last_block_ref)
+        return self.client.JournalStream(req, timeout)
