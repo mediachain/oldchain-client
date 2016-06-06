@@ -2,7 +2,7 @@ from grpc.beta import implementations
 
 from mediachain.datastore.data_objects import Artefact, Entity, ChainCell, \
     MultihashReference
-from mediachain.proto import Transactor_pb2
+from mediachain.proto import Transactor_pb2 #pylint: disable=no-name-in-module
 
 TIMEOUT_SECS = 120
 

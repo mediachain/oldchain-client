@@ -1,7 +1,7 @@
 import cbor
 from grpc.beta import implementations
 from grpc.framework.interfaces.face.face import NetworkError
-from mediachain.proto import Transactor_pb2
+from mediachain.proto import Transactor_pb2 #pylint: disable=no-name-in-module
 
 TIMEOUT_SECS=120
 
