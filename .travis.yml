@@ -1,0 +1,10 @@
+language: python
+install:
+  - pip install -r requirements.txt
+  - pip install pylint
+script:
+  - pylint --errors-only --disable=print-statement mediachain
+notifications:
+  slack: mediachain:gzFe4w4HwIlNnxaHy1vAKW3q
+  on_success: change
+  on_failure: change
