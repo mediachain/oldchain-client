@@ -7,6 +7,7 @@ FILES=("Transactor.proto")
 
 mkdir -p $PROTOBUF_DIR
 mkdir -p $PROTOS_OUT_DIR
+rm $PROTOBUF_DIR/*
 rm $PROTOS_OUT_DIR/[!_]*
 
 echo "Updating protocol protobuf from upstream master..."
