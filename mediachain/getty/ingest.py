@@ -2,9 +2,7 @@ import json
 import sys
 from copy import deepcopy
 from datetime import datetime
-from os import walk
-from os.path import join
-
+from os import walk, path
 from grpc.framework.interfaces.face.face import AbortionError
 
 from mediachain.datastore.data_objects import Artefact, Entity, \
@@ -125,18 +123,22 @@ def dedup_artists(transactor,
     return entities
 
 
-def walk_json_dir(dd='getty/json/images',
+def walk_json_dir(dd='getty',
                   max_num=0):
     nn = 0
     for dir_name, subdir_list, file_list in walk(dd):
         for fn in file_list:
+            ext = path.splitext(fn)[-1]
+            if ext.lower() != 'json':
+                continue
+
             nn += 1
 
             if max_num and (nn + 1 >= max_num):
                 print ('ENDING EARLY')
                 return
 
-            fn = join(dir_name, fn)
+            fn = path.join(dir_name, fn)
 
             with open(fn, mode='rb') as f:
                 try:
@@ -144,5 +146,5 @@ def walk_json_dir(dd='getty/json/images',
                     decoded_json = json.loads(content.decode('utf-8'))
                     yield content, decoded_json
                 except ValueError:
-                    print "couldn't decode json from {}".format(fn)
+                    print "couldn't import json from {}".format(fn)
                     continue
