@@ -6,6 +6,7 @@ import pprint
 
 class Record(object):
     meta = dict()
+    metaSource = None
 
     @staticmethod
     def mediachain_type():
@@ -17,10 +18,15 @@ class Record(object):
 
     @staticmethod
     def optional_fields():
-        return []
+        return [u'metaSource']
 
-    def __init__(self, meta):
+    def __init__(self, meta, meta_source=None):
         self.meta = meta
+
+        if isinstance(meta_source, basestring):
+            self.metaSource = MultihashReference.from_base58(meta_source)
+        else:
+            self.metaSource = meta_source
 
     def __str__(self):
         pp = pprint.PrettyPrinter(indent=2)
@@ -29,15 +35,21 @@ class Record(object):
     def to_map(self):
         m = {u'type': self.mediachain_type()}
 
+        def add_to_map(k, v):
+            if isinstance(v, MultihashReference):
+                m[k] = v.to_map()
+            else:
+                m[k] = v
+
         for f in self.required_fields():
             if f not in self.__dict__:
                 raise Exception("Required field " + f +
                                 " is missing, cannot serialize")
-            m[f] = self.__dict__[f]
+            add_to_map(f, self.__dict__[f])
 
         for f in self.optional_fields():
             if f in self.__dict__:
-                m[f] = self.__dict__[f]
+                add_to_map(f, self.__dict__[f])
 
         return m
 
@@ -99,8 +111,8 @@ class ChainCell(Record):
     def optional_fields():
         return super(ChainCell, ChainCell).optional_fields() + [u'chain']
 
-    def __init__(self, meta, ref, chain=None):
-        super(ChainCell, self).__init__(meta)
+    def __init__(self, meta, ref, chain=None, meta_source=None):
+        super(ChainCell, self).__init__(meta, meta_source=meta_source)
         self.ref = ref.to_map()
         if chain is not None:
             self.chain = chain.to_map()
@@ -119,8 +131,9 @@ class ArtefactCreationCell(ChainCell):
             .required_fields()
         return super_fields + [u'entity']
 
-    def __init__(self, meta, ref, entity, chain=None):
-        super(ArtefactCreationCell, self).__init__(meta, ref, chain)
+    def __init__(self, meta, ref, entity, chain=None, meta_source=None):
+        super(ArtefactCreationCell, self).__init__(
+            meta, ref, chain, meta_source=meta_source)
         self.entity = entity.to_map()
 
 
