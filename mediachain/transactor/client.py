@@ -37,12 +37,10 @@ class TransactorClient(object):
 
     def journal_stream(self, last_block_ref=None, timeout=TIMEOUT_SECS):
         if isinstance(last_block_ref, MultihashReference):
-            last_block_ref = Transactor_pb2.MultihashReference(
-                reference=last_block_ref.multihash_base58())
-        elif last_block_ref is not None:
-            last_block_ref = Transactor_pb2.MultihashReference(
-                reference=last_block_ref)
+            last_block_ref = last_block_ref.multihash_base58()
 
         req = Transactor_pb2.JournalStreamRequest(
-            lastJournalBlock=last_block_ref)
+            lastJournalBlock=Transactor_pb2.MultihashReference(
+                reference=last_block_ref
+            ))
         return self.client.JournalStream(req, timeout)
