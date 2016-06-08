@@ -3,6 +3,7 @@ from grpc.beta import implementations
 from mediachain.datastore.data_objects import Artefact, Entity, ChainCell, \
     MultihashReference
 from mediachain.proto import Transactor_pb2 #pylint: disable=no-name-in-module
+from mediachain.reader.api import get_object
 
 TIMEOUT_SECS = 120
 
@@ -20,6 +21,8 @@ def assert_chaincell(cell):
 class TransactorClient(object):
 
     def __init__(self, host, port):
+        self.host = host
+        self.port = port
         channel = implementations.insecure_channel(host, port)
         self.client = Transactor_pb2.beta_create_TransactorService_stub(channel)
 
@@ -44,3 +47,10 @@ class TransactorClient(object):
                 reference=last_block_ref
             ))
         return self.client.JournalStream(req, timeout)
+
+    def canonical_stream(self, last_block_ref=None, timeout=TIMEOUT_SECS):
+        for event in self.journal_stream(last_block_ref, timeout):
+            if event.WhichOneof("event") == "chainUpdated":
+                ref = event.chainUpdated.canonical.reference
+                obj = get_object(self.host, self.port, ref)
+                yield obj
