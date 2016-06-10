@@ -6,6 +6,7 @@ before_install:
   - sudo apt-get install gcc-4.8 -y
   - ls /usr/lib/gcc/x86_64-linux-gnu/4.8/include/
 install:
+  - pip install --upgrade pip
   - pip install -r requirements.txt
   - pip install pylint
 script:
