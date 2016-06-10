@@ -1,9 +1,15 @@
 language: python
+before_install:
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo apt-get -qq update
+  - sudo apt-get install gcc-4.8 -y
+  - ls /usr/lib/gcc/x86_64-linux-gnu/4.8/include/
 install:
+  - pip install --upgrade pip
   - pip install -r requirements.txt
   - pip install pylint
 script:
-  - pylint --errors-only --disable=print-statement mediachain
+  - pylint --errors-only --disable=print-statement,catching-non-exception mediachain
 notifications:
   slack: mediachain:gzFe4w4HwIlNnxaHy1vAKW3q
   on_success: change
