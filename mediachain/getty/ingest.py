@@ -42,7 +42,7 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
     else:
         artist_meta = deepcopy(common_meta)
         artist_meta.update({u'data': {u'name': artist_name}})
-        entity = Entity(artist_meta)
+        entity = Entity(artist_meta, meta_source=raw_ref)
         entity_ref = transactor.insert_canonical(entity)
 
     data = {u'_id': u'getty_' + getty_json['id'],
@@ -58,12 +58,13 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities):
     artefact_meta = deepcopy(common_meta)
     artefact_meta.update({u'data': data})
 
-    artefact = Artefact(artefact_meta)
+    artefact = Artefact(artefact_meta, meta_source=raw_ref)
 
     artefact_ref = transactor.insert_canonical(artefact)
     creation_cell = ArtefactCreationCell(meta=common_meta,
                                          ref=artefact_ref,
-                                         entity=entity_ref)
+                                         entity=entity_ref,
+                                         meta_source=raw_ref)
 
     cell_ref = transactor.update_chain(creation_cell)
     return artefact, artefact_ref, entity_ref, cell_ref
@@ -108,11 +109,12 @@ def dedup_artists(transactor,
 
     entities = {}
     for n, raw_ref_str in artist_name_map.iteritems():
-        meta = {u'rawRef': MultihashReference.from_base58(raw_ref_str).to_map(),
+        raw_ref = MultihashReference.from_base58(raw_ref_str)
+        meta = {u'rawRef': raw_ref.to_map(),
                 u'translatedAt': unicode(datetime.utcnow().isoformat()),
                 u'translator': TRANSLATOR_ID,
                 u'data': {u'name': n}}
-        entity = Entity(meta)
+        entity = Entity(meta, meta_source=raw_ref)
         try:
             ref = transactor.insert_canonical(entity)
             entities[n] = ref
