@@ -11,7 +11,7 @@ with open(reqs_file) as f:
 
 setup(
     version='0.1.0',
-    name='mediachain-cli',
+    name='mediachain-client',
     description='mediachain reader command line interface',
     author='Mediachain Labs',
     packages=find_packages('.'),
