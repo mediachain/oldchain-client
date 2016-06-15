@@ -31,7 +31,7 @@ def ingest(host, port, dir_root, max_num=0):
 
 
 def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities,
-                                thumbnail_ref=None, thumbnail_uri=None):
+                                thumbnail_ref=None):
     common_meta = {u'rawRef': raw_ref.to_map(),
                    u'translatedAt': unicode(datetime.utcnow().isoformat()),
                    u'translator': TRANSLATOR_ID}
@@ -60,9 +60,6 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities,
         m = MultihashReference.from_base58(thumbnail_ref)
         data[u'thumbnail'] = m.to_map()
 
-    if thumbnail_uri is not None:
-        data[u'thumbnail_base64'] = thumbnail_uri
-
     artefact_meta = deepcopy(common_meta)
     artefact_meta.update({u'data': data})
 
@@ -89,17 +86,14 @@ def getty_artefacts(transactor,
         raw_ref = MultihashReference.from_base58(raw_ref_str)
         getty_json = json.loads(content.decode('utf-8'))
 
+        thumbnail_ref = None
         thumbnail_data = get_thumbnail_data(file_name)
         if thumbnail_data is not None:
             thumbnail_ref = datastore.put(thumbnail_data)
-            thumbnail_uri = make_jpeg_data_uri(thumbnail_data)
-        else:
-            thumbnail_ref = None
-            thumbnail_uri = None
-
+            
         yield getty_to_mediachain_objects(
             transactor, raw_ref, getty_json, entities,
-            thumbnail_ref=thumbnail_ref, thumbnail_uri=thumbnail_uri
+            thumbnail_ref=thumbnail_ref
         )
 
 
