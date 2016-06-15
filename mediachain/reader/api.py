@@ -1,6 +1,6 @@
 import cbor
 from mediachain.getty.thumbnails import make_jpeg_data_uri
-from mediachain.datastore.dynamo import get_db
+from mediachain.datastore.dynamo import get_db, DynamoError
 from mediachain.reader.transactor import get_chain_head
 import copy
 import base58
@@ -30,14 +30,23 @@ def get_object(host, port, object_id):
 
 
 def fetch_thumbnails(obj):
+    def with_fallback():
+        o = copy.deepcopy(obj)
+        if 'meta' not in o:
+            o['meta'] = {}
+        if 'data' not in o['meta']:
+            o['meta']['data'] = {}
+
+        o['meta']['data']['thumbnail_base64'] = 'NO_IMAGE'
+        return o
+
     try:
         thumb_ref_bytes = obj['meta']['data']['thumbnail']['@link']
         thumb_ref = base58.b58encode(thumb_ref_bytes)
-    except ValueError:
-        return obj
-
-    db = get_db()
-    thumb = db.get(thumb_ref)
+        db = get_db()
+        thumb = db.get(thumb_ref)
+    except (ValueError, DynamoError):
+        return with_fallback()
 
     with_thumb = copy.deepcopy(obj)
     with_thumb['meta']['data']['thumbnail_base64'] = make_jpeg_data_uri(thumb)
