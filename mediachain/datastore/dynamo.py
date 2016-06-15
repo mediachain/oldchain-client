@@ -7,6 +7,7 @@ import time
 import random
 from base58 import b58encode
 from boto3.dynamodb.types import Binary
+from botocore.exceptions import ClientError as DynamoError
 from multihash import encode as multihash_encode, SHA2_256
 
 from mediachain.datastore.data_objects import Record, MultihashReference
@@ -44,7 +45,7 @@ def with_retry(func, *args, **kwargs):
     while True:
         try:
             output = func(*args, **kwargs)
-        except botocore.exceptions.ClientError as e:
+        except DynamoError as e:
             error_code = e.response['Error']['Code']
             if error_code not in RETRYABLE_ERRORS:
                 raise e
