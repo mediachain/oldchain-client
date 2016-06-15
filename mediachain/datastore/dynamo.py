@@ -1,6 +1,10 @@
+import botocore
 import boto3
 import cbor
 import copy
+import functools
+import time
+import random
 from base58 import b58encode
 from boto3.dynamodb.types import Binary
 from multihash import encode as multihash_encode, SHA2_256
@@ -25,6 +29,41 @@ def get_db():
 
     return __DB_INSTANCE
 
+
+BACKOFF_COEFF = 50.0
+MAX_ATTEMPTS = 10
+RETRYABLE_ERRORS = [
+    "InternalServerError",
+    "ProvisionedThroughputExceededException"
+]
+
+
+def with_retry(func, *args, **kwargs):
+    operation = func.__name__
+    attempts = 1
+    while True:
+        try:
+            output = func(*args, **kwargs)
+        except botocore.exceptions.ClientError as e:
+            error_code = e.response['Error']['Code']
+            if error_code not in RETRYABLE_ERRORS:
+                raise e
+            if attempts >= MAX_ATTEMPTS:
+                print('Operation {} failed after {} attempts'.format(
+                    operation, attempts
+                ))
+                raise e
+        else:
+            return output
+
+        base_delay = min((BACKOFF_COEFF * (2 ** attempts)) / 1000.0, 60.0)
+        delay = random.uniform(0, base_delay)
+        print('Operation {} failed, retrying in {}s'.format(
+            operation, delay))
+        time.sleep(delay)
+        attempts += 1
+
+
 class DynamoDatastore(object):
     def __init__(self, **kwargs):
         cfg = copy.deepcopy(get_aws_config())
@@ -41,6 +80,7 @@ class DynamoDatastore(object):
     def put(self, data_object):
         # TODO: implement chunked writes for large objects
         table = self.mediachain_table()
+        put_with_retry = functools.partial(with_retry, table.put_item)
 
         if isinstance(data_object, Record):
             key = data_object.multihash_base58()
@@ -50,19 +90,20 @@ class DynamoDatastore(object):
             key = b58encode(str(hash_bytes))
             content = data_object
 
-        table.put_item(Item={'multihash': key,
+        put_with_retry(Item={'multihash': key,
                              'data': Binary(content)})
         return key
 
     def get(self, ref):
         table = self.mediachain_table()
+        get_with_retry = functools.partial(with_retry, table.get_item)
 
         if isinstance(ref, MultihashReference):
             ref_multihash = ref.multihash_base58()
         else:
             ref_multihash = ref
 
-        item = table.get_item(Key={'multihash': ref_multihash})
+        item = get_with_retry(Key={'multihash': ref_multihash})
         if item is None:
             raise KeyError('Could not find key {} in Dynamo'.format(ref))
         byte_string = bytes(item['Item']['data'])
