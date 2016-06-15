@@ -84,7 +84,7 @@ def getty_artefacts(transactor,
                     max_num=0):
     entities = dedup_artists(transactor, datastore, dd, max_num)
 
-    for content, getty_json in walk_json_dir(dd, max_num):
+    for content, file_name in walk_json_dir(dd, max_num):
         raw_ref_str = datastore.put(content)
         raw_ref = MultihashReference.from_base58(raw_ref_str)
         getty_json = json.loads(content.decode('utf-8'))
