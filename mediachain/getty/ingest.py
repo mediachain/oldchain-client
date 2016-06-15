@@ -32,8 +32,7 @@ def ingest(host, port, dir_root, max_num=0):
 
 def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities,
                                 thumbnail_ref=None):
-    common_meta = {u'rawRef': raw_ref.to_map(),
-                   u'translatedAt': unicode(datetime.utcnow().isoformat()),
+    common_meta = {u'translatedAt': unicode(datetime.utcnow().isoformat()),
                    u'translator': TRANSLATOR_ID}
 
     artist_name = getty_json['artist']
