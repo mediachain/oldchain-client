@@ -4,6 +4,7 @@ import cbor
 import copy
 import functools
 import time
+import random
 from base58 import b58encode
 from boto3.dynamodb.types import Binary
 from multihash import encode as multihash_encode, SHA2_256
@@ -30,7 +31,7 @@ def get_db():
 
 
 BACKOFF_COEFF = 50.0
-MAX_ATTEMPTS = 4
+MAX_ATTEMPTS = 10
 RETRYABLE_ERRORS = [
     "InternalServerError",
     "ProvisionedThroughputExceededException"
@@ -55,8 +56,9 @@ def with_retry(func, *args, **kwargs):
         else:
             return output
 
-        delay = (BACKOFF_COEFF * (2 ** attempts)) / 1000.0
-        print('Operation {} failed, retrying in {}ms'.format(
+        base_delay = min((BACKOFF_COEFF * (2 ** attempts)) / 1000.0, 60.0)
+        delay = random.uniform(0, base_delay)
+        print('Operation {} failed, retrying in {}s'.format(
             operation, delay))
         time.sleep(delay)
         attempts += 1
