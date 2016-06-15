@@ -1,4 +1,5 @@
 import cbor
+from mediachain.getty.thumbnails import make_jpeg_data_uri
 from mediachain.datastore.dynamo import get_db
 from mediachain.reader.transactor import get_chain_head
 import copy
@@ -25,7 +26,23 @@ def get_object(host, port, object_id):
     except KeyError as e:
         pass
 
-    return obj
+    return fetch_thumbnails(obj)
+
+
+def fetch_thumbnails(obj):
+    try:
+        thumb_ref_bytes = obj['meta']['data']['thumbnail']['@link']
+        thumb_ref = base58.b58encode(thumb_ref_bytes)
+    except ValueError:
+        return obj
+
+    db = get_db()
+    thumb = db.get(thumb_ref)
+
+    with_thumb = copy.deepcopy(obj)
+    with_thumb['meta']['data']['thumbnail_base64'] = make_jpeg_data_uri(thumb)
+    return with_thumb
+
 
 def apply_update_cell(acc, cell):
     result = copy.deepcopy(acc)
