@@ -21,7 +21,7 @@ def thumb_path(json_file_path):
     return path.join(base, 'downloads', 'thumb', jpg_fn)
 
 
-def get_thumbnail_data(json_file_path, size=(150, 150)):
+def get_thumbnail_data(json_file_path, size=(150, 150), download=False):
     """ Returns the raw, jpeg encoded thumbnail data for the
     image described by the json at the given path.
 
@@ -38,12 +38,14 @@ def get_thumbnail_data(json_file_path, size=(150, 150)):
         thumb = thumb_path(json_file_path)
         if path.isfile(thumb):
             img = Image.open(thumb)
-        else:
+        elif download:
             with open(json_file_path) as f:
                 getty_json = json.load(f)
             uri = thumbnail_url(getty_json)
             r = requests.get(uri)
             img = Image.open(StringIO(r.content))
+        else:
+            return None
 
         if (img.size[0] > size[0]) or (img.size[1] > size[1]):
             img.thumbnail(size, Image.ANTIALIAS)
