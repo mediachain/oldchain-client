@@ -14,13 +14,13 @@ from mediachain.getty.thumbnails import get_thumbnail_data, make_jpeg_data_uri
 TRANSLATOR_ID = u'GettyTranslator/0.1'
 
 
-def ingest(host, port, dir_root, max_num=0):
+def ingest(host, port, dir_root, max_num=0, download_thumbs=False):
     transactor = TransactorClient(host, port)
     datastore = get_db()
 
     try:
         for artefact, artefact_ref, entity_ref, cell_ref in getty_artefacts(
-            transactor, datastore, dir_root, max_num
+            transactor, datastore, dir_root, max_num, download_thumbs
         ):
             getty_id = artefact.meta[u'data'][u'_id']
             print "Ingested getty image '{0}' {1}".format(
@@ -77,7 +77,8 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities,
 def getty_artefacts(transactor,
                     datastore,
                     dd='getty/json/images',
-                    max_num=0):
+                    max_num=0,
+                    download_thumbs=False):
     entities = dedup_artists(transactor, datastore, dd, max_num)
 
     for content, file_name in walk_json_dir(dd, max_num):
@@ -86,7 +87,7 @@ def getty_artefacts(transactor,
         getty_json = json.loads(content.decode('utf-8'))
 
         thumbnail_ref = None
-        thumbnail_data = get_thumbnail_data(file_name)
+        thumbnail_data = get_thumbnail_data(file_name, download=download_thumbs)
         if thumbnail_data is not None:
             thumbnail_ref = datastore.put(thumbnail_data)
             

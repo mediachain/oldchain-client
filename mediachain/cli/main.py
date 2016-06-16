@@ -94,10 +94,17 @@ def main(arguments=None):
                                help='Max json entries to parse. ' +
                                'Defaults to 0 (no maximum)',
                                default=0)
+    ingest_parser.add_argument('-d', '--download_thumbnails',
+                               type=bool,
+                               dest='download_thumbs',
+                               help='If set, download thumbnails if not found' +
+                                    ' on disk.',
+                               default=False)
 
     SUBCOMMANDS={
         'get': lambda ns: api.get_and_print_object(ns.host, ns.port, ns.object_id),
-        'ingest': lambda ns: ingest.ingest(ns.host, ns.port, ns.dir, ns.max_num)
+        'ingest': lambda ns: ingest.ingest(ns.host, ns.port, ns.dir, ns.max_num,
+                                           ns.download_thumbs)
     }
 
     ns = parser.parse_args(arguments)
