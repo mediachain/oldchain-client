@@ -7,6 +7,7 @@ from mediachain.datastore.dynamo import get_db
 from mediachain.translation import get_translator
 from pprint import PrettyPrinter
 
+
 class Writer(object):
     def __init__(self, transactor, datastore=None):
         self.transactor = transactor
@@ -36,7 +37,8 @@ class Writer(object):
                         continue
 
                 nn += 1
-                translated = translator.translate(content)
+                parsed = translator.parse(content)
+                translated = translator.translate(parsed)
                 yield translated, content, fn
 
     def write_dir(self, translator_id, data_dir, limit=None,
