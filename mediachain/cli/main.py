@@ -1,11 +1,15 @@
 import sys
 import argparse
 import os
+import traceback
+from time import sleep
+
 from mediachain.reader import api
 from mediachain.getty import ingest
 from mediachain.datastore import set_use_ipfs_for_raw_data
 from mediachain.datastore.dynamo import set_aws_config
 from mediachain.datastore.ipfs import set_ipfs_config
+
 
 
 def main(arguments=None):
@@ -143,7 +147,14 @@ def main(arguments=None):
 
     configure_aws(ns)
     configure_ipfs(ns)
-    fn(ns)
+
+    try:
+        fn(ns)
+    except KeyboardInterrupt:
+        for line in traceback.format_exception(*sys.exc_info()):
+            print line,
+        sleep(1)
+        os._exit(-1)
 
 if __name__ == "__main__":
     main()
