@@ -3,6 +3,7 @@ import cbor
 from tempfile import NamedTemporaryFile
 from mediachain.datastore.data_objects import Record, MultihashReference
 
+
 __IPFS_CONFIG = {'host': 'localhost', 'port': 5001}
 
 
@@ -59,5 +60,7 @@ class IpfsDatastore(object):
         else:
             ref_multihash = ref
 
-        byte_string = self.client.object_data(ref_multihash)
-        return cbor.loads(byte_string)
+        stream = self.client.cat(ref_multihash, stream=True)
+        byte_string = stream.read()
+        return byte_string
+
