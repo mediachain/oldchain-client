@@ -61,14 +61,3 @@ class Translator(object):
         """
 
         return False
-
-    @staticmethod
-    def get_media_locations(parsed_metadata):
-        """
-        Return a dict containing uris for media files associated with
-        the given `raw_metadata`.
-
-        :return: a dict in this shape:
-            {"thumbnail": "http://example.com/thumbnail.jpg"}
-        """
-        return {}

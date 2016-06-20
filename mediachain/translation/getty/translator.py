@@ -16,6 +16,7 @@ class GettyTranslator(Translator):
         # extract artist Entity
         artist_name = getty_json['artist']
         artist_entity = {
+            '__mediachain_object__': True,
             'type': 'entity',
             'meta': {
                 'data': {
@@ -37,16 +38,29 @@ class GettyTranslator(Translator):
                 'date_created': getty_json['date_created']
                 }
 
+        try:
+            thumb_uri = [i['uri'] for i in parsed_metadata['display_sizes']
+                         if i['name'] == 'thumb'].pop()
+            data['thumbnail'] = {
+                '__mediachain_asset__': True,
+                'uri': thumb_uri
+            }
+        except IndexError:
+            pass
+
         artwork_artefact = {
+            '__mediachain_object__': True,
             'type': 'artefact',
             'meta': {'data': data}
         }
 
         return {
-            'object': artwork_artefact,
-            'related': [
-                {'relationship': 'artefactCreatedBy',
-                 'object': artist_entity
+            'canonical': artwork_artefact,
+            'chain': [
+                {'__mediachain_object__': True,
+                 'type': 'artefactCreatedBy',
+                 'meta': {},
+                 'entity': artist_entity
                  }
             ]
         }
@@ -56,11 +70,3 @@ class GettyTranslator(Translator):
         ext = os.path.splitext(file_path)[-1]
         return ext.lower() == '.json'
 
-    @staticmethod
-    def get_media_locations(parsed_metadata):
-        try:
-            thumb = [i['uri'] for i in parsed_metadata['display_sizes']
-                     if i['name'] == 'thumb']
-            return {'thumbnail': thumb}
-        except ValueError:
-            return {}
