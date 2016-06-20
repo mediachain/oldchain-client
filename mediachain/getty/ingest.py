@@ -10,7 +10,7 @@ from mediachain.datastore.data_objects import Artefact, Entity, \
 from mediachain.datastore.dynamo import get_db
 from mediachain.datastore.ipfs import IpfsDatastore
 from mediachain.transactor.client import TransactorClient
-from mediachain.getty.thumbnails import get_thumbnail_data, make_jpeg_data_uri
+from mediachain.getty.thumbnails import get_thumbnail_data
 
 TRANSLATOR_ID = u'GettyTranslator/0.1'
 
@@ -83,14 +83,14 @@ def getty_artefacts(transactor,
     entities = dedup_artists(transactor, datastore, dd, max_num)
 
     for content, file_name in walk_json_dir(dd, max_num):
-        raw_ref_str = datastore.put(content)
+        raw_ref_str = put_raw_data(content)
         raw_ref = MultihashReference.from_base58(raw_ref_str)
         getty_json = json.loads(content.decode('utf-8'))
 
         thumbnail_ref = None
         thumbnail_data = get_thumbnail_data(file_name, download=download_thumbs)
         if thumbnail_data is not None:
-            thumbnail_ref = datastore.put(thumbnail_data)
+            thumbnail_ref = put_raw_data(thumbnail_data)
             
         yield getty_to_mediachain_objects(
             transactor, raw_ref, getty_json, entities,
@@ -165,9 +165,11 @@ def walk_json_dir(dd='getty',
                     continue
             yield content, fn
 
+
 def put_raw_data(raw):
     ipfs = IpfsDatastore()
     # print('adding raw metadata to ipfs...')
     ref = ipfs.put(raw)
     # print('raw metadata added. ref: ' + str(ref))
     return ref
+
