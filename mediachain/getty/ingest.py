@@ -8,7 +8,7 @@ from grpc.framework.interfaces.face.face import AbortionError
 from mediachain.datastore.data_objects import Artefact, Entity, \
     ArtefactCreationCell, MultihashReference
 from mediachain.datastore.dynamo import get_db
-from mediachain.datastore.ipfs import IpfsDatastore
+from mediachain.datastore import get_raw_datastore
 from mediachain.transactor.client import TransactorClient
 from mediachain.getty.thumbnails import get_thumbnail_data
 
@@ -167,9 +167,9 @@ def walk_json_dir(dd='getty',
 
 
 def put_raw_data(raw):
-    ipfs = IpfsDatastore()
+    datastore = get_raw_datastore()
     # print('adding raw metadata to ipfs...')
-    ref = ipfs.put(raw)
+    ref = datastore.put(raw)
     # print('raw metadata added. ref: ' + str(ref))
     return ref
 

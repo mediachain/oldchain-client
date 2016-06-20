@@ -3,6 +3,23 @@ import cbor
 from tempfile import NamedTemporaryFile
 from mediachain.datastore.data_objects import Record, MultihashReference
 
+__IPFS_CONFIG = {'host': 'localhost', 'port': 5001}
+
+
+def set_ipfs_config(cfg):
+    global __IPFS_CONFIG
+    __IPFS_CONFIG = cfg
+
+
+def get_ipfs_config():
+    global __IPFS_CONFIG
+    return __IPFS_CONFIG
+
+
+def get_ipfs_datastore():
+    global __IPFS_CONFIG
+    return IpfsDatastore(**__IPFS_CONFIG)
+
 
 class IpfsDatastore(object):
     def __init__(self, host='127.0.0.1', port=5001):

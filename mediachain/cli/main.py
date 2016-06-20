@@ -3,7 +3,10 @@ import argparse
 import os
 from mediachain.reader import api
 from mediachain.getty import ingest
+from mediachain.datastore import set_use_ipfs_for_raw_data
 from mediachain.datastore.dynamo import set_aws_config
+from mediachain.datastore.ipfs import set_ipfs_config
+
 
 def main(arguments=None):
     def configure_aws(ns):
@@ -23,6 +26,19 @@ def main(arguments=None):
                 pass
 
         set_aws_config(aws)
+
+    def configure_ipfs(ns):
+        try:
+            cfg = {'host': getattr(ns, 'ipfs_host'),
+                   'port': getattr(ns, 'ipfs_port')
+                   }
+
+            set_ipfs_config(cfg)
+
+            if getattr(ns, 'use_ipfs'):
+                set_use_ipfs_for_raw_data(True)
+        except AttributeError:
+            pass
 
     if arguments == None:
         arguments = sys.argv[1:]
@@ -69,6 +85,21 @@ def main(arguments=None):
                         default='Mediachain',
                         dest='mediachain_table_name',
                         help='Name of dynamo table to work wtih')
+    parser.add_argument('-i', '--use_ipfs',
+                        dest='use_ipfs',
+                        action='store_true',
+                        help='If set, upload images and raw metadata ' +
+                             'to IPFS'
+                        )
+    parser.add_argument('--ipfs_host',
+                        type=str,
+                        default='localhost',
+                        help='Hostname or ip address of IPFS api server'
+                        )
+    parser.add_argument('--ipfs_port',
+                        type=int,
+                        default=5001,
+                        help='Port for IPFS api server')
 
     subparsers = parser.add_subparsers(help='Mediachain Reader SubCommands',
                                        dest='subcommand')
@@ -111,6 +142,7 @@ def main(arguments=None):
     fn = SUBCOMMANDS[ns.subcommand]
 
     configure_aws(ns)
+    configure_ipfs(ns)
     fn(ns)
 
 if __name__ == "__main__":
