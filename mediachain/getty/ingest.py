@@ -8,6 +8,7 @@ from grpc.framework.interfaces.face.face import AbortionError
 from mediachain.datastore.data_objects import Artefact, Entity, \
     ArtefactCreationCell, MultihashReference
 from mediachain.datastore.dynamo import get_db
+from mediachain.datastore.ipfs import IpfsDatastore
 from mediachain.transactor.client import TransactorClient
 from mediachain.getty.thumbnails import get_thumbnail_data, make_jpeg_data_uri
 
@@ -112,7 +113,7 @@ def dedup_artists(transactor,
         if n is None or n in artist_name_map:
             continue
         unique += 1
-        raw_ref_str = datastore.put(content)
+        raw_ref_str = put_raw_data(content)
         artist_name_map[n] = raw_ref_str
 
         sys.stdout.write('\r')
@@ -162,6 +163,11 @@ def walk_json_dir(dd='getty',
                 except ValueError:
                     print "couldn't import json from {}".format(fn)
                     continue
+            yield content, fn
 
-                yield content, fn
-
+def put_raw_data(raw):
+    ipfs = IpfsDatastore()
+    # print('adding raw metadata to ipfs...')
+    ref = ipfs.put(raw)
+    # print('raw metadata added. ref: ' + str(ref))
+    return ref
