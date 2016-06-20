@@ -31,10 +31,14 @@ def ingest(host, port, dir_root, max_num=0, download_thumbs=False):
         print("RPC Error: " + str(e))
 
 
-def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities,
-                                thumbnail_ref=None):
-    common_meta = {u'translatedAt': unicode(datetime.utcnow().isoformat()),
-                   u'translator': TRANSLATOR_ID}
+def getty_to_mediachain_objects(transactor, meta_source, getty_json, entities,
+                                thumbnail_ref=None, raw_ref=None):
+    if raw_ref is None:
+        raw_ref = meta_source
+
+    common_meta = {u'translated_at': unicode(datetime.utcnow().isoformat()),
+                   u'translator': TRANSLATOR_ID,
+                   u'raw_ref': raw_ref.to_map()}
 
     artist_name = getty_json['artist']
     if artist_name in entities:
@@ -42,7 +46,7 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities,
     else:
         artist_meta = deepcopy(common_meta)
         artist_meta.update({u'data': {u'name': artist_name}})
-        entity = Entity(artist_meta, meta_source=raw_ref)
+        entity = Entity(artist_meta, meta_source=meta_source)
         entity_ref = transactor.insert_canonical(entity)
 
     data = {u'_id': u'getty_' + getty_json['id'],
@@ -63,13 +67,13 @@ def getty_to_mediachain_objects(transactor, raw_ref, getty_json, entities,
     artefact_meta = deepcopy(common_meta)
     artefact_meta.update({u'data': data})
 
-    artefact = Artefact(artefact_meta, meta_source=raw_ref)
+    artefact = Artefact(artefact_meta, meta_source=meta_source)
 
     artefact_ref = transactor.insert_canonical(artefact)
     creation_cell = ArtefactCreationCell(meta=common_meta,
                                          ref=artefact_ref,
                                          entity=entity_ref,
-                                         meta_source=raw_ref)
+                                         meta_source=meta_source)
 
     cell_ref = transactor.update_chain(creation_cell)
     return artefact, artefact_ref, entity_ref, cell_ref
@@ -85,6 +89,8 @@ def getty_artefacts(transactor,
     for content, file_name in walk_json_dir(dd, max_num):
         raw_ref_str = put_raw_data(content)
         raw_ref = MultihashReference.from_base58(raw_ref_str)
+        meta_source = MultihashReference.from_base58(datastore.put(content))
+
         getty_json = json.loads(content.decode('utf-8'))
 
         thumbnail_ref = None
@@ -93,8 +99,9 @@ def getty_artefacts(transactor,
             thumbnail_ref = put_raw_data(thumbnail_data)
             
         yield getty_to_mediachain_objects(
-            transactor, raw_ref, getty_json, entities,
-            thumbnail_ref=thumbnail_ref
+            transactor, meta_source, getty_json, entities,
+            thumbnail_ref=thumbnail_ref,
+            raw_ref=raw_ref
         )
 
 
