@@ -1,9 +1,13 @@
 import sys
 import argparse
 import os
+import traceback
+from time import sleep
+
 from mediachain.reader import api
 from mediachain.getty import ingest
 from mediachain.datastore.dynamo import set_aws_config
+
 
 def main(arguments=None):
     def configure_aws(ns):
@@ -111,7 +115,15 @@ def main(arguments=None):
     fn = SUBCOMMANDS[ns.subcommand]
 
     configure_aws(ns)
-    fn(ns)
+
+    try:
+        fn(ns)
+    except KeyboardInterrupt:
+        for line in traceback.format_exception(*sys.exc_info()):
+            print line,
+        sleep(1)
+        os._exit(-1)
+
 
 if __name__ == "__main__":
     main()
