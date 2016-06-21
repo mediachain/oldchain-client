@@ -192,3 +192,4 @@ def encode(content, code):
     output = bytearray([code, len(digest)])
     output.extend(digest)
     return output
+
