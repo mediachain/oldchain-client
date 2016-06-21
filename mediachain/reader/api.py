@@ -57,7 +57,7 @@ def fetch_thumbnails(obj):
         thumb_ref = base58.b58encode(thumb_ref_bytes)
         db = get_raw_datastore()
         thumb = db.get(thumb_ref)
-    except (ValueError, DynamoError):
+    except (ValueError, LookupError, DynamoError):
         return with_fallback()
 
     with open('/tmp/thumbnail.jpg', 'wb') as f:
