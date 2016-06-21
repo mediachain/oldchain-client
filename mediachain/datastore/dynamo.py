@@ -105,8 +105,8 @@ class DynamoDatastore(object):
             ref_multihash = ref
 
         item = get_with_retry(Key={'multihash': ref_multihash})
-        if item is None:
-            raise KeyError('Could not find key {} in Dynamo'.format(ref))
+        if item is None or 'Item' not in item:
+            raise KeyError('Could not find key {} in DynamoDB'.format(ref))
         byte_string = bytes(item['Item']['data'])
         return cbor.loads(byte_string)
 
