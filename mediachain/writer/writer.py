@@ -6,7 +6,6 @@ import re
 from pprint import PrettyPrinter
 
 from base58 import b58decode
-from mediachain.ingestion.media_loader import load_media
 from mediachain.ingestion.asset_loader import load_asset
 from mediachain.datastore.dynamo import get_db
 from mediachain.datastore.data_objects import MultihashReference
@@ -25,80 +24,29 @@ class Writer(object):
         for result in dataset_iterator:
             translated = result['translated']
             raw = result['raw_content']
-            media = load_media(result['local_media'],
-                               result['remote_media'],
-                               download_remote=self.download_remote_assets)
+            local_assets = result.get('local_assets', {})
+            self.submit_translator_output(translator_id, translated,
+                                          raw, local_assets)
 
-            self.write_translated(translator_id, translated, raw, media)
+    def submit_translator_output(self,
+                                 translator_id,
+                                 translated,
+                                 raw_content,
+                                 local_assets):
+        common_meta = {'translator': translator_id}
+        meta_source = self.store_raw(raw_content)
 
-    def write_translated(self,
-                         translator_id,
-                         translated_metadata,
-                         raw_metadata,
-                         media=None):
-        meta_source = string_ref_to_map(self.datastore.put(raw_metadata))
+        canonical = translated['canonical']
+        canonical = self.flatten_record(canonical, meta_source, local_assets)
+        canonical_ref = self.submit_object(canonical)
 
-        common_meta = {
-            'translator': unicode(translator_id),
-            # 'date_translated': unicode(datetime.utcnow().isoformat())
-        }
+        chain = translated.get('chain', [])
+        for cell in chain:
+            cell = self.flatten_record(cell)
+            cell['ref'] = canonical_ref
+            self.submit_object(cell)
 
-        obj = deepcopy(translated_metadata['object'])
-        merge_meta(obj, common_meta)
-        if media is not None:
-            media = self.write_media(media)
-            obj['meta']['data'].update(media)
-
-        pp = PrettyPrinter(indent=2)
-
-        obj['metaSource'] = meta_source
-        print('inserting object: ')
-        pp.pprint(obj)
-        obj_ref = self.transactor.insert_canonical(obj)
-        related = translated_metadata.get('related', [])
-
-        refs = {'object': obj_ref.multihash_base58(), 'related': []}
-
-        for r in related:
-            rel = r['relationship']
-            rel_obj = r['object']
-            rel_obj['metaSource'] = meta_source
-            merge_meta(rel_obj, common_meta)
-
-            print('inserting related entity:')
-            pp.pprint(rel_obj)
-            # TODO: catch journal errors for duplicate canonicals
-            rel_obj_ref = self.transactor.insert_canonical(rel_obj)
-            rel_obj_type = rel_obj['type']
-
-            cell = {'type': rel,
-                    'ref': obj_ref.to_map(),
-                    'meta': deepcopy(common_meta),
-                    'metaSource': meta_source,
-                    rel_obj_type: rel_obj_ref.to_map()
-                    }
-
-            print('updating chain with cell: ')
-            pp.pprint(cell)
-            cell_ref = self.transactor.update_chain(cell)
-
-            refs['related'].append({
-                'cell': cell_ref.multihash_base58(),
-                'object': rel_obj_ref.multihash_base58()
-            })
-
-        print('insert complete.  refs: ')
-        pp.pprint(refs)
-        return refs
-
-    def write_media(self, media_data):
-        media_refs = {}
-        for name, data in media_data.iteritems():
-            ref_str = self.datastore.put(data)
-            media_refs[name] = string_ref_to_map(ref_str)
-        return media_refs
-
-    def flatten_record(self, record):
+    def flatten_record(self, record, meta_source, local_assets):
         if '__mediachain_object__' not in record:
             raise ValueError('value is not a mediachain object')
 
@@ -109,6 +57,7 @@ class Writer(object):
                    if is_mediachain_object(v)}
 
         for k, a in assets.iteritems():
+            a = local_assets.get(k, a)
             ref = self.store_asset(a)
             if ref is None:
                 print('Unable to store asset with key {}, removing'.format(k))
@@ -117,12 +66,17 @@ class Writer(object):
                 record[k] = ref
 
         for k, o in objects.iteritems():
-            o = self.flatten_record(o)
+            o = self.flatten_record(o, meta_source, local_assets)
             ref = self.submit_object(o)
             record[k] = ref
 
         del record['__mediachain_object__']
+        record['metaSource'] = meta_source
         return record
+
+    def store_raw(self, raw_content):
+        ref = self.datastore.put(raw_content)
+        return string_ref_to_map(ref)
 
     def store_asset(self, asset):
         data = load_asset(asset, download_remote=self.download_remote_assets)
@@ -131,7 +85,6 @@ class Writer(object):
         return string_ref_to_map(self.datastore.put(data))
 
     def submit_object(self, obj):
-        # TODO: catch duplicate insert
         try:
             if is_canonical(obj):
                 ref = self.transactor.insert_canonical(obj)
@@ -144,8 +97,6 @@ class Writer(object):
 
         return ref
 
-    def flatten_translator_output(self, translated):
-        canonical = translated['canonical']
 
 
 def is_tagged_dict(tag, value):
