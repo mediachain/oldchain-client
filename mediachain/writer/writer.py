@@ -4,6 +4,7 @@ from copy import deepcopy
 import re
 from base58 import b58decode
 from mediachain.ingestion.asset_loader import load_asset, process_asset
+from mediachain.datastore import get_raw_datastore
 from mediachain.datastore.dynamo import get_db
 from mediachain.datastore.data_objects import MultihashReference
 from grpc.framework.interfaces.face.face import NetworkError
@@ -32,8 +33,13 @@ class Writer(object):
                                  translated,
                                  raw_content,
                                  local_assets):
-        common_meta = {'translator': translator_id}
-        meta_source = self.store_raw(raw_content)
+        meta_source = MultihashReference.from_base58(
+            self.datastore.put(raw_content))
+
+        raw_ref = self.store_raw(raw_content)
+
+        common_meta = {'translator': translator_id,
+                       'raw_ref': raw_ref.to_map()}
 
         canonical = translated['canonical']
         canonical = self.flatten_record(canonical, common_meta,
@@ -86,7 +92,8 @@ class Writer(object):
         return record
 
     def store_raw(self, raw_content):
-        ref = self.datastore.put(raw_content)
+        store = get_raw_datastore()
+        ref = store.put(raw_content)
         return MultihashReference.from_base58(ref)
 
     def store_asset(self, name, local_asset, remote_asset):
@@ -96,7 +103,7 @@ class Writer(object):
         if data is None:
             return None
         data = process_asset(name, data)
-        return MultihashReference.from_base58(self.datastore.put(data))
+        return self.store_raw(data)
 
     def submit_object(self, obj):
         try:
