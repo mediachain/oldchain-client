@@ -44,7 +44,7 @@ class TransactorClient(object):
 
     def canonical_stream(self, timeout=TIMEOUT_SECS):
         for event in self.journal_stream(timeout):
-            if event.WhichOneof("event") == "chainUpdateEvent":
+            if event.WhichOneof("event") == "updateChainEvent":
                 ref = event.chainUpdated.canonical.reference
                 obj = get_object(self.host, self.port, ref)
                 yield obj
