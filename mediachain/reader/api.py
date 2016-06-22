@@ -2,7 +2,7 @@ import cbor
 from mediachain.getty.thumbnails import make_jpeg_data_uri
 from mediachain.datastore import get_raw_datastore
 from mediachain.datastore.dynamo import get_db, DynamoError
-from mediachain.reader.transactor import get_chain_head
+import mediachain.transactor.client as tx
 import copy
 import base58
 from pprint import PrettyPrinter
@@ -27,8 +27,9 @@ def stringify_refs(obj):
 
 def get_object(host, port, object_id):
     db = get_db()
+    transactor = tx.TransactorClient(host, port)
     base = db.get(object_id)
-    head = get_chain_head(host, port, object_id)
+    head = transactor.get_chain_head(object_id)
     chain = get_object_chain(head, [])
     obj = reduce(chain_folder, chain, base)
 
