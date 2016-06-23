@@ -9,7 +9,7 @@ from pprint import PrettyPrinter
 
 
 def get_and_print_object(host, port, object_id):
-    obj = get_object(host, port, object_id)
+    obj = get_object(host, port, object_id, fetch_images=False)
     pp = PrettyPrinter(indent=2)
     pp.pprint(stringify_refs(obj))
 
@@ -25,7 +25,7 @@ def stringify_refs(obj):
     return res
 
 
-def get_object(host, port, object_id):
+def get_object(host, port, object_id, fetch_images=True):
     db = get_db()
     transactor = tx.TransactorClient(host, port)
     base = db.get(object_id)
@@ -35,11 +35,13 @@ def get_object(host, port, object_id):
 
     try:
         entity_id = obj['entity']
-        obj['entity'] = get_object(host, port, entity_id)
+        obj['entity'] = get_object(host, port, entity_id, fetch_images)
     except KeyError as e:
         pass
 
-    return fetch_thumbnails(obj)
+    if fetch_images and obj.get('type') == 'artefact':
+        return fetch_thumbnails(obj)
+    return obj
 
 
 def fetch_thumbnails(obj):
