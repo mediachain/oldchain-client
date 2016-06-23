@@ -62,4 +62,4 @@ def get_thumbnail_data(json_file_path, size=(150, 150), download=False):
 
 
 def make_jpeg_data_uri(data):
-    return 'data:image/jpeg;base64,' + base64.urlsafe_b64encode(data)
+    return 'data:image/jpeg;base64,' + base64.b64encode(data)
