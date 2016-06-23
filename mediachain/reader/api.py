@@ -2,7 +2,6 @@ import cbor
 from mediachain.getty.thumbnails import make_jpeg_data_uri
 from mediachain.datastore import get_raw_datastore
 from mediachain.datastore.dynamo import get_db, DynamoError
-import mediachain.transactor.client as tx
 import copy
 import base58
 import json
@@ -10,9 +9,8 @@ from pygments import highlight
 from pygments.lexers.data import JsonLexer
 from pygments.formatters.terminal import TerminalFormatter
 
-def get_and_print_object(host, port, object_id):
-    obj = get_object(host, port, object_id)
-    obj = get_object(host, port, object_id, fetch_images=False)
+def get_and_print_object(transactor, object_id):
+    obj = get_object(transactor, object_id, fetch_images=False)
     j = json.dumps(stringify_refs(obj), indent=2)
     print highlight(j, JsonLexer(), TerminalFormatter())
 
@@ -28,9 +26,8 @@ def stringify_refs(obj):
     return res
 
 
-def get_object(host, port, object_id, fetch_images=True):
+def get_object(transactor, object_id, fetch_images=True):
     db = get_db()
-    transactor = tx.TransactorClient(host, port)
     base = db.get(object_id)
     head = transactor.get_chain_head(object_id)
     chain = get_object_chain(head, [])
@@ -38,7 +35,7 @@ def get_object(host, port, object_id, fetch_images=True):
 
     try:
         entity_id = obj['entity']
-        obj['entity'] = get_object(host, port, entity_id, fetch_images)
+        obj['entity'] = get_object(transactor, entity_id, fetch_images)
     except KeyError as e:
         pass
 

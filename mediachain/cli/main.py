@@ -9,7 +9,7 @@ from mediachain.getty import ingest
 from mediachain.datastore import set_use_ipfs_for_raw_data
 from mediachain.datastore.dynamo import set_aws_config
 from mediachain.datastore.ipfs import set_ipfs_config
-
+from mediachain.transactor.client import TransactorClient
 
 
 def main(arguments=None):
@@ -136,8 +136,12 @@ def main(arguments=None):
                                     ' on disk.',
                                default=False)
 
+    def get_cmd(ns):
+        transactor = TransactorClient(ns.host, ns.port)
+        api.get_and_print_object(transactor, ns.object_id)
+
     SUBCOMMANDS={
-        'get': lambda ns: api.get_and_print_object(ns.host, ns.port, ns.object_id),
+        'get': get_cmd,
         'ingest': lambda ns: ingest.ingest(ns.host, ns.port, ns.dir, ns.max_num,
                                            ns.download_thumbs)
     }
