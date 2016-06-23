@@ -7,8 +7,8 @@ import copy
 import base58
 import json
 from pygments import highlight
-from pygments.lexers import JsonLexer
-from pygments.formatters import TerminalFormatter
+from pygments.lexers.data import JsonLexer
+from pygments.formatters.terminal import TerminalFormatter
 
 def get_and_print_object(host, port, object_id):
     obj = get_object(host, port, object_id)
