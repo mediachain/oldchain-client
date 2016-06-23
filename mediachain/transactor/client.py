@@ -3,7 +3,7 @@ from grpc.beta import implementations
 from mediachain.datastore.data_objects import Artefact, Entity, ChainCell, \
     MultihashReference
 from mediachain.proto import Transactor_pb2 #pylint: disable=no-name-in-module
-from mediachain.reader.api import get_object
+import mediachain.reader as reader
 
 TIMEOUT_SECS = 120
 
@@ -32,29 +32,28 @@ class TransactorClient(object):
         ref = self.client.InsertCanonical(req, timeout)
         return MultihashReference.from_base58(ref.reference)
 
+    def get_chain_head(self, ref, timeout=TIMEOUT_SECS):
+        req = Transactor_pb2.MultihashReference(reference=ref)
+        response = self.client.LookupChain(req, timeout)
+        if response.WhichOneof('reference') == 'chain':
+            return MultihashReference.from_base58(
+                response.chain.reference
+            )
+        return None
+
     def update_chain(self, cell, timeout=TIMEOUT_SECS):
         assert_chaincell(cell)
         req = Transactor_pb2.UpdateRequest(chainCellCbor=cell.to_cbor_bytes())
         ref = self.client.UpdateChain(req, timeout)
         return MultihashReference.from_base58(ref.reference)
 
-    def journal_stream(self, last_block_ref=None, timeout=TIMEOUT_SECS):
-        if isinstance(last_block_ref, MultihashReference):
-            last_block_ref = last_block_ref.multihash_base58()
-
-        if last_block_ref is None:
-            req = Transactor_pb2.JournalStreamRequest()
-        else:
-            req = Transactor_pb2.JournalStreamRequest(
-                lastJournalBlock=Transactor_pb2.MultihashReference(
-                    reference=last_block_ref
-                ))
-            
+    def journal_stream(self, timeout=TIMEOUT_SECS):
+        req = Transactor_pb2.JournalStreamRequest()
         return self.client.JournalStream(req, timeout)
 
-    def canonical_stream(self, last_block_ref=None, timeout=TIMEOUT_SECS):
-        for event in self.journal_stream(last_block_ref, timeout):
-            if event.WhichOneof("event") == "chainUpdated":
-                ref = event.chainUpdated.canonical.reference
-                obj = get_object(self.host, self.port, ref)
+    def canonical_stream(self, timeout=TIMEOUT_SECS):
+        for event in self.journal_stream(timeout):
+            if event.WhichOneof("event") == "updateChainEvent":
+                ref = event.updateChainEvent.canonical.reference
+                obj = reader.api.get_object(self.host, self.port, ref)
                 yield obj

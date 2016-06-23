@@ -2,7 +2,7 @@ import cbor
 from mediachain.getty.thumbnails import make_jpeg_data_uri
 from mediachain.datastore import get_raw_datastore
 from mediachain.datastore.dynamo import get_db, DynamoError
-from mediachain.reader.transactor import get_chain_head
+import mediachain.transactor.client as tx
 import copy
 import base58
 import json
@@ -12,6 +12,7 @@ from pygments.formatters import TerminalFormatter
 
 def get_and_print_object(host, port, object_id):
     obj = get_object(host, port, object_id)
+    obj = get_object(host, port, object_id, fetch_images=False)
     j = json.dumps(stringify_refs(obj), indent=2)
     print highlight(j, JsonLexer(), TerminalFormatter())
 
@@ -27,20 +28,23 @@ def stringify_refs(obj):
     return res
 
 
-def get_object(host, port, object_id):
+def get_object(host, port, object_id, fetch_images=True):
     db = get_db()
+    transactor = tx.TransactorClient(host, port)
     base = db.get(object_id)
-    head = get_chain_head(host, port, object_id)
+    head = transactor.get_chain_head(object_id)
     chain = get_object_chain(head, [])
     obj = reduce(chain_folder, chain, base)
 
     try:
         entity_id = obj['entity']
-        obj['entity'] = get_object(host, port, entity_id)
+        obj['entity'] = get_object(host, port, entity_id, fetch_images)
     except KeyError as e:
         pass
 
-    return fetch_thumbnails(obj)
+    if fetch_images and obj.get('type') == 'artefact':
+        return fetch_thumbnails(obj)
+    return obj
 
 
 def fetch_thumbnails(obj):
