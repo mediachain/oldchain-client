@@ -3,7 +3,7 @@ from grpc.beta import implementations
 from mediachain.datastore.data_objects import Artefact, Entity, ChainCell, \
     MultihashReference
 from mediachain.proto import Transactor_pb2 #pylint: disable=no-name-in-module
-import mediachain.reader.api
+import mediachain.reader.api as reader
 
 TIMEOUT_SECS = 120
 
@@ -55,7 +55,5 @@ class TransactorClient(object):
         for event in self.journal_stream(timeout):
             if event.WhichOneof("event") == "updateChainEvent":
                 ref = event.updateChainEvent.canonical.reference
-                obj = mediachain.reader.api.get_object(self.host,
-                                                       self.port,
-                                                       ref)
+                obj = reader.get_object(self, ref)
                 yield obj
