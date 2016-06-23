@@ -35,10 +35,15 @@ class RocksDatastore(object):
                 hash_bytes = multihash_encode(data_object, SHA2_256)
                 ref = b58encode(bytes(hash_bytes))
 
+        content = data_object
         try:
             content = data_object.to_cbor_bytes()
         except AttributeError:
-            content = data_object
+            if isinstance(data_object, dict):
+                try:
+                    content = cbor.dumps(data_object)
+                except ValueError:
+                    pass
 
         ref = bytes(ref)
         content = bytes(content)
