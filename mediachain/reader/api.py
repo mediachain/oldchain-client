@@ -4,13 +4,15 @@ from mediachain.datastore import get_raw_datastore
 from mediachain.datastore.dynamo import get_db, DynamoError
 import copy
 import base58
-from pprint import PrettyPrinter
-
+import json
+from pygments import highlight
+from pygments.lexers.data import JsonLexer
+from pygments.formatters.terminal import TerminalFormatter
 
 def get_and_print_object(transactor, object_id):
     obj = get_object(transactor, object_id, fetch_images=False)
-    pp = PrettyPrinter(indent=2)
-    pp.pprint(stringify_refs(obj))
+    j = json.dumps(stringify_refs(obj), indent=2)
+    print highlight(j, JsonLexer(), TerminalFormatter())
 
 
 def stringify_refs(obj):
