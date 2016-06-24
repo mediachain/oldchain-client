@@ -12,7 +12,14 @@ RETRYABLE_ERRORS = [
 
 
 def with_retry(func, *args, **kwargs):
-    operation = func.__name__
+    try:
+        operation = str(func._method)
+    except AttributeError:
+        try:
+            operation = func.__name__
+        except AttributeError:
+            operation = 'UNKNOWN'
+    
     attempts = 1
     while True:
         try:
