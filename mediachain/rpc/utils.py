@@ -1,7 +1,7 @@
 import time
 import random
 from grpc.beta.interfaces import StatusCode
-from grpc.framework.interfaces.face.face import NetworkError
+from grpc.framework.interfaces.face.face import AbortionError
 
 BACKOFF_COEFF = 50.0
 MAX_ATTEMPTS = 10
@@ -17,7 +17,7 @@ def with_retry(func, *args, **kwargs):
     while True:
         try:
             output = func(*args, **kwargs)
-        except NetworkError as e:
+        except AbortionError as e:
             # pylint doesn't like grpc's crazy exception hierarchy
             # pylint: disable=raising-non-exception
             if e.code not in RETRYABLE_ERRORS:
