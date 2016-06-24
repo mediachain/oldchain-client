@@ -16,7 +16,7 @@ class RpcDatastore(object):
         self.rpc = Datastore_pb2.beta_create_DatastoreService_stub(channel)
 
     def put(self, data_object, timeout=TIMEOUT_SECS):
-        put_with_retry = with_retry(self.rpc.put)
+        put_with_retry = functools.partial(with_retry, self.rpc.put)
         byte_string = bytes_for_object(data_object)
         req = Datastore_pb2.DataObject(data=byte_string)
         ref = put_with_retry(req, timeout)
@@ -24,8 +24,9 @@ class RpcDatastore(object):
 
     def get(self, ref, timeout=TIMEOUT_SECS):
         ref = rpc_ref(ref)
+        get_with_retry = functools.partial(with_retry, self.rpc.get)
         try:
-            obj_bytes = self.rpc.get(ref, timeout).data
+            obj_bytes = get_with_retry(ref, timeout).data
         except AbortionError as e:
             if e.code == StatusCode.NOT_FOUND:
                 return None
