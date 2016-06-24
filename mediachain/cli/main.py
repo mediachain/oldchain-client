@@ -14,7 +14,9 @@ from mediachain.transactor.client import TransactorClient
 
 def main(arguments=None):
     def configure_datastore(ns):
-        host = getattr(ns, 'datastore_host', getattr(ns, 'host'))
+        host = getattr(ns, 'datastore_host')
+        if host is None:
+            host = getattr(ns, 'host')
         port = getattr(ns, 'datastore_port')
         set_rpc_datastore_config({'host': host, 'port': port})
 
@@ -45,14 +47,18 @@ def main(arguments=None):
                         dest='host')
     parser.add_argument('-p', '--port',
                         type=int,
-                        required=True,
+                        default=10001,
                         dest='port')
     parser.add_argument('--datastore_host',
                         type=str,
-                        required=False)
+                        required=False,
+                        help='Hostname or ip address of datastore service. ' +
+                        'If not given, will default to the value of --host')
     parser.add_argument('--datastore_port',
                         type=int,
-                        required=True)
+                        default=10002,
+                        help='Port to use when connecting to the datastore ' +
+                             'service.')
     parser.add_argument('-i', '--use_ipfs',
                         dest='use_ipfs',
                         action='store_true',
