@@ -2,7 +2,8 @@ from grpc.beta import implementations
 
 from mediachain.datastore.data_objects import Artefact, Entity, ChainCell, \
     MultihashReference
-from mediachain.proto import Transactor_pb2 #pylint: disable=no-name-in-module
+from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
+from mediachain.proto import Types_pb2  # pylint: disable=no-name-in-module
 import mediachain.reader.api as reader
 
 TIMEOUT_SECS = 120
@@ -33,7 +34,7 @@ class TransactorClient(object):
         return MultihashReference.from_base58(ref.reference)
 
     def get_chain_head(self, ref, timeout=TIMEOUT_SECS):
-        req = Transactor_pb2.MultihashReference(reference=ref)
+        req = Types_pb2.MultihashReference(reference=ref)
         response = self.client.LookupChain(req, timeout)
         if response.WhichOneof('reference') == 'chain':
             return MultihashReference.from_base58(
