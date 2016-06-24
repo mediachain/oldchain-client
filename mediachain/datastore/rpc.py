@@ -1,10 +1,11 @@
-import cbor
+
 from grpc.beta import implementations
 from grpc.beta.interfaces import StatusCode
 from grpc.framework.interfaces.face.face import AbortionError
 from mediachain.proto import Datastore_pb2  # pylint: disable=no-name-in-module
 from mediachain.datastore.utils import rpc_ref, multihash_ref, \
     bytes_for_object, object_for_bytes
+from mediachain.rpc.utils import with_retry
 
 TIMEOUT_SECS = 120
 
@@ -15,9 +16,10 @@ class RpcDatastore(object):
         self.rpc = Datastore_pb2.beta_create_DatastoreService_stub(channel)
 
     def put(self, data_object, timeout=TIMEOUT_SECS):
+        put_with_retry = with_retry(self.rpc.put)
         byte_string = bytes_for_object(data_object)
         req = Datastore_pb2.DataObject(data=byte_string)
-        ref = self.rpc.put(req, timeout)
+        ref = put_with_retry(req, timeout)
         return multihash_ref(ref)
 
     def get(self, ref, timeout=TIMEOUT_SECS):
