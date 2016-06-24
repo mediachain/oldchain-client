@@ -18,6 +18,8 @@ def with_retry(func, *args, **kwargs):
         try:
             output = func(*args, **kwargs)
         except NetworkError as e:
+            # pylint doesn't like grpc's crazy exception hierarchy
+            # pylint: disable=raising-non-exception
             if e.code not in RETRYABLE_ERRORS:
                 raise e
             if attempts >= MAX_ATTEMPTS:
