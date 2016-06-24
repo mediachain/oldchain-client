@@ -7,8 +7,8 @@ from grpc.framework.interfaces.face.face import AbortionError
 
 from mediachain.datastore.data_objects import Artefact, Entity, \
     ArtefactCreationCell, MultihashReference
-from mediachain.datastore.dynamo import get_db
-from mediachain.datastore import get_raw_datastore
+from mediachain.datastore import get_db, get_raw_datastore
+from mediachain.datastore.utils import multihash_ref
 from mediachain.transactor.client import TransactorClient
 from mediachain.getty.thumbnails import get_thumbnail_data
 
@@ -61,7 +61,7 @@ def getty_to_mediachain_objects(transactor, meta_source, getty_json, entities,
             }
 
     if thumbnail_ref is not None:
-        m = MultihashReference.from_base58(thumbnail_ref)
+        m = multihash_ref(thumbnail_ref)
         data[u'thumbnail'] = m.to_map()
 
     artefact_meta = deepcopy(common_meta)
@@ -87,9 +87,8 @@ def getty_artefacts(transactor,
     entities = dedup_artists(transactor, datastore, dd, max_num)
 
     for content, file_name in walk_json_dir(dd, max_num):
-        raw_ref_str = put_raw_data(content)
-        raw_ref = MultihashReference.from_base58(raw_ref_str)
-        meta_source = MultihashReference.from_base58(datastore.put(content))
+        raw_ref = put_raw_data(content)
+        meta_source = datastore.put(content)
 
         getty_json = json.loads(content.decode('utf-8'))
 
@@ -120,8 +119,8 @@ def dedup_artists(transactor,
         if n is None or n in artist_name_map:
             continue
         unique += 1
-        raw_ref_str = put_raw_data(content)
-        artist_name_map[n] = raw_ref_str
+        raw_ref = put_raw_data(content)
+        artist_name_map[n] = raw_ref
 
         sys.stdout.write('\r')
         sys.stdout.write('Parsed {0} entries, {1} unique artists'.format(
@@ -130,8 +129,7 @@ def dedup_artists(transactor,
         sys.stdout.flush()
 
     entities = {}
-    for n, raw_ref_str in artist_name_map.iteritems():
-        raw_ref = MultihashReference.from_base58(raw_ref_str)
+    for n, raw_ref in artist_name_map.iteritems():
         meta = {u'rawRef': raw_ref.to_map(),
                 u'translatedAt': unicode(datetime.utcnow().isoformat()),
                 u'translator': TRANSLATOR_ID,
@@ -178,5 +176,5 @@ def put_raw_data(raw):
     # print('adding raw metadata to ipfs...')
     ref = datastore.put(raw)
     # print('raw metadata added. ref: ' + str(ref))
-    return ref
+    return multihash_ref(ref)
 

@@ -1,7 +1,6 @@
 import cbor
 from mediachain.getty.thumbnails import make_jpeg_data_uri
-from mediachain.datastore import get_raw_datastore
-from mediachain.datastore.dynamo import get_db, DynamoError
+from mediachain.datastore import get_db, get_raw_datastore
 import copy
 import base58
 import json
@@ -60,7 +59,7 @@ def fetch_thumbnails(obj):
         thumb_ref = base58.b58encode(thumb_ref_bytes)
         db = get_raw_datastore()
         thumb = db.get(thumb_ref)
-    except (ValueError, LookupError, DynamoError):
+    except (ValueError, LookupError):
         return with_fallback()
 
     with open('/tmp/thumbnail.jpg', 'wb') as f:

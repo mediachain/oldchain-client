@@ -1,5 +1,5 @@
 from ipfs import IpfsDatastore
-from dynamo import get_db
+from rpc import get_db
 
 __USE_IPFS_FOR_RAW_DATA = False
 

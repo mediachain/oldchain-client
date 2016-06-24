@@ -19,7 +19,7 @@ def with_retry(func, *args, **kwargs):
             operation = func.__name__
         except AttributeError:
             operation = 'UNKNOWN'
-    
+
     attempts = 1
     while True:
         try:

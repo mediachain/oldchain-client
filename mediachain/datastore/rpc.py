@@ -9,6 +9,31 @@ from mediachain.rpc.utils import with_retry
 
 TIMEOUT_SECS = 120
 
+__RPC_STORE_CONFIG = None
+
+
+def set_rpc_datastore_config(cfg):
+    global __RPC_STORE_CONFIG
+    __RPC_STORE_CONFIG = cfg
+
+
+def get_rpc_datastore_config():
+    global __RPC_STORE_CONFIG
+    return __RPC_STORE_CONFIG
+
+
+def get_db():
+    cfg = get_rpc_datastore_config()
+    try:
+        host = cfg['host']
+        port = int(cfg['port'])
+    except (TypeError, LookupError, ValueError):
+        raise RuntimeError('No RPC datastore configuration has been set. ' +
+                           'please call set_rpc_datastore_config before ' +
+                           'calling get_db')
+
+    return RpcDatastore(host, port)
+
 
 class RpcDatastore(object):
     def __init__(self, host, port):
