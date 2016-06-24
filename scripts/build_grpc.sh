@@ -3,7 +3,7 @@
 BASEURL=https://raw.githubusercontent.com/mediachain/mediachain/master/protocol/src/main/protobuf/
 PROTOBUF_DIR=$(dirname $0)/../protobuf
 PROTOS_OUT_DIR=$(dirname $0)/../mediachain/proto
-FILES=("Transactor.proto")
+FILES=("Transactor.proto Types.proto Datastore.proto")
 
 mkdir -p $PROTOBUF_DIR
 mkdir -p $PROTOS_OUT_DIR
