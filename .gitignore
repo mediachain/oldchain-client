@@ -58,6 +58,5 @@ coverage.xml
 .ipynb_checkpoints
 
 # gRPC
-protobuf/
 **/proto/*.py
-!proto/__init__.py
+!**/proto/__init__.py
