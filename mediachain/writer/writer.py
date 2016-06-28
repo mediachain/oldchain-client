@@ -1,15 +1,13 @@
 from __future__ import unicode_literals
 
 from copy import deepcopy
-from datetime import datetime
 import re
-from pprint import PrettyPrinter
-
 from base58 import b58decode
-from mediachain.ingestion.asset_loader import load_asset
+from mediachain.ingestion.asset_loader import load_asset, process_asset
 from mediachain.datastore.dynamo import get_db
 from mediachain.datastore.data_objects import MultihashReference
 from grpc.framework.interfaces.face.face import NetworkError
+
 
 class Writer(object):
     def __init__(self, transactor, datastore=None,
@@ -25,8 +23,9 @@ class Writer(object):
             translated = result['translated']
             raw = result['raw_content']
             local_assets = result.get('local_assets', {})
-            self.submit_translator_output(translator_id, translated,
-                                          raw, local_assets)
+            refs = self.submit_translator_output(translator_id, translated,
+                                                 raw, local_assets)
+            print('Inserted canonical: {}'.format(refs['canonical']))
 
     def submit_translator_output(self,
                                  translator_id,
@@ -37,73 +36,86 @@ class Writer(object):
         meta_source = self.store_raw(raw_content)
 
         canonical = translated['canonical']
-        canonical = self.flatten_record(canonical, meta_source, local_assets)
+        canonical = self.flatten_record(canonical, common_meta,
+                                        meta_source, local_assets)
         canonical_ref = self.submit_object(canonical)
 
         chain = translated.get('chain', [])
+        chain_refs = []
         for cell in chain:
-            cell = self.flatten_record(cell)
-            cell['ref'] = canonical_ref
-            self.submit_object(cell)
+            cell = self.flatten_record(cell, common_meta,
+                                       meta_source, local_assets)
+            cell['ref'] = canonical_ref.to_map()
+            chain_ref = self.submit_object(cell)
+            chain_refs += chain_ref.multihash_base58()
+        return {
+            'canonical': canonical_ref.multihash_base58(),
+            'chain': chain_refs
+        }
 
-    def flatten_record(self, record, meta_source, local_assets):
-        if '__mediachain_object__' not in record:
-            raise ValueError('value is not a mediachain object')
-
+    def flatten_record(self, record, common_meta, meta_source, local_assets):
+        record = deepcopy(record)
         assets = {k: v for k, v in record.iteritems()
                   if is_asset(v)}
 
-        objects = {k: v for k, v in record.iteritems()
-                   if is_mediachain_object(v)}
-
         for k, a in assets.iteritems():
-            a = local_assets.get(k, a)
-            ref = self.store_asset(a)
+            local = local_assets.get(k, None)
+            ref = self.store_asset(k, local, a)
             if ref is None:
                 print('Unable to store asset with key {}, removing'.format(k))
                 del record[k]
             else:
-                record[k] = ref
+                record[k] = ref.to_map()
+
+        objects = {k: v for k, v in record.iteritems()
+                   if isinstance(v, dict)}
 
         for k, o in objects.iteritems():
-            o = self.flatten_record(o, meta_source, local_assets)
-            ref = self.submit_object(o)
-            record[k] = ref
+            flat = self.flatten_record(o, common_meta,
+                                       meta_source, local_assets)
+            if is_mediachain_object(o):
+                ref = self.submit_object(flat)
+                record[k] = ref.to_map()
+            else:
+                record[k] = flat
 
-        del record['__mediachain_object__']
-        record['metaSource'] = meta_source
+        if is_mediachain_object(record):
+            del record['__mediachain_object__']
+            record['metaSource'] = meta_source.to_map()
+            record['meta'].update(common_meta)
         return record
 
     def store_raw(self, raw_content):
         ref = self.datastore.put(raw_content)
-        return string_ref_to_map(ref)
+        return MultihashReference.from_base58(ref)
 
-    def store_asset(self, asset):
-        data = load_asset(asset, download_remote=self.download_remote_assets)
+    def store_asset(self, name, local_asset, remote_asset):
+        data = load_asset(local_asset)
+        if data is None and self.download_remote_assets:
+            data = load_asset(remote_asset)
         if data is None:
             return None
-        return string_ref_to_map(self.datastore.put(data))
+        data = process_asset(name, data)
+        return MultihashReference.from_base58(self.datastore.put(data))
 
     def submit_object(self, obj):
         try:
             if is_canonical(obj):
-                ref = self.transactor.insert_canonical(obj)
+                return self.transactor.insert_canonical(obj)
             else:
-                ref = self.transactor.update_chain(obj)
+                return self.transactor.update_chain(obj)
         except NetworkError as e:
-            ref = duplicate_canonical_ref(e)
-            if ref is None:
+            ref_str = duplicate_canonical_ref(e.details)
+            if ref_str is None:
                 raise
 
-        return ref
-
+        return MultihashReference.from_base58(ref_str)
 
 
 def is_tagged_dict(tag, value):
-    try:
-        return tag in value
-    except TypeError:
+    if not isinstance(value, dict):
         return False
+    return tag in value
 
 
 def is_asset(value):
@@ -137,14 +149,14 @@ def string_ref_to_map(string_ref):
 # this regex will only work for base58 encoded sha2-256 hashes,
 # and will break if we ever change the error message :(
 duplicate_insert_pattern = re.compile(
-    'Duplicate Journal Insert.*(Qm[1-9a-zA-Z][^OIl]{44})'
+    '.*Duplicate Journal Insert.*(Qm[1-9a-km-zA-HJ-NP-Z]{44}).*'
 )
 
 
-def duplicate_canonical_ref(grpc_error):
-    m = re.match(duplicate_insert_pattern, grpc_error.details)
+def duplicate_canonical_ref(grpc_error_str):
+    m = re.match(duplicate_insert_pattern, grpc_error_str)
     if not m:
         return None
-    ref_str = m.group(1)
-    return MultihashReference.from_base58(ref_str)
+    return m.group(1)
+
 

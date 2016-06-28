@@ -133,9 +133,8 @@ def main(arguments=None):
             )
 
         transactor = TransactorClient(args.host, args.port)
-        writer = Writer(transactor)
-        writer.write_dataset(iterator,
-                             download_remote_media=args.download_thumbs)
+        writer = Writer(transactor, download_remote_assets=args.download_thumbs)
+        writer.write_dataset(iterator)
 
     SUBCOMMANDS={
         'get': get_cmd,

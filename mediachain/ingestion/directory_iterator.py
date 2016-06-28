@@ -32,17 +32,15 @@ class DirectoryIterator(DatasetIterator):
                 nn += 1
                 parsed = self.translator.parse(content)
                 translated = self.translator.translate(parsed)
-                local_media = self.get_local_media_paths(fn, parsed)
-                remote_media = self.translator.get_media_locations(parsed)
+                local_assets = self.get_local_assets(fn, parsed)
 
                 yield {
                     'translated': translated,
                     'raw_content': content,
                     'parsed': parsed,
-                    'local_media': local_media,
-                    'remote_media': remote_media
+                    'local_assets': local_assets
                 }
 
     @staticmethod
-    def get_local_media_paths(metadata_filepath, parsed_metadata):
+    def get_local_assets(metadata_filepath, parsed_metadata):
         return {}

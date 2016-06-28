@@ -6,10 +6,10 @@ from PIL import Image
 from StringIO import StringIO
 
 
-def load_asset(asset, download_remote=False):
+def load_asset(asset):
     try:
         uri = asset['uri']
-    except KeyError:
+    except (TypeError, KeyError):
         return None
 
     if uri.lower().startswith('file://'):
@@ -21,24 +21,19 @@ def load_asset(asset, download_remote=False):
         except IOError as e:
             print('error reading from {}: {}'.format(file_path, e))
 
-    if download_remote:
-        try:
-            r = requests.get(uri)
-            return r.content
-        except requests.exceptions.RequestException as e:
-            print('error downloading media from {}: {}'.format(uri, e))
+    try:
+        r = requests.get(uri)
+        return r.content
+    except requests.exceptions.RequestException as e:
+        print('error downloading media from {}: {}'.format(uri, e))
 
     return None
 
 
-def process_media(media_data):
-    processed = {}
-    for name, data in media_data.iteritems():
-        if name == 'thumbnail':
-            processed[name] = resize_image(data, THUMBNAIL_SIZE)
-        else:
-            processed[name] = data
-    return processed
+def process_asset(name, asset_data):
+    if name == 'thumbnail':
+        return resize_image(asset_data, THUMBNAIL_SIZE)
+    return asset_data
 
 
 # size constants for images
