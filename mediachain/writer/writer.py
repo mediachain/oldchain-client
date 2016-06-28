@@ -2,14 +2,12 @@ from __future__ import unicode_literals
 
 from copy import deepcopy
 import re
-from base58 import b58decode
 from mediachain.ingestion.asset_loader import load_asset, process_asset
 from mediachain.translation.utils import is_asset, is_canonical, \
     is_mediachain_object
 from mediachain.datastore import get_db, get_raw_datastore
-from mediachain.datastore.data_objects import MultihashReference
 from grpc.framework.interfaces.face.face import NetworkError
-
+from mediachain.datastore.utils import multihash_ref
 
 class Writer(object):
     def __init__(self, transactor, datastore=None,
@@ -34,8 +32,7 @@ class Writer(object):
                                  translated,
                                  raw_content,
                                  local_assets):
-        meta_source = MultihashReference.from_base58(
-            self.datastore.put(raw_content))
+        meta_source = multihash_ref(self.datastore.put(raw_content))
 
         raw_ref = self.store_raw(raw_content)
 
@@ -95,7 +92,7 @@ class Writer(object):
     def store_raw(self, raw_content):
         store = get_raw_datastore()
         ref = store.put(raw_content)
-        return MultihashReference.from_base58(ref)
+        return multihash_ref(ref)
 
     def store_asset(self, name, local_asset, remote_asset):
         data = load_asset(local_asset)
@@ -117,7 +114,7 @@ class Writer(object):
             if ref_str is None:
                 raise
 
-        return MultihashReference.from_base58(ref_str)
+        return multihash_ref(ref_str)
 
 
 def merge_meta(obj, meta):
@@ -127,11 +124,6 @@ def merge_meta(obj, meta):
         merged.update(obj['meta'])
     obj['meta'] = merged
 
-
-def string_ref_to_map(string_ref):
-    return {
-        '@link': b58decode(string_ref)
-    }
 
 # TODO(yusef): replace string parsing hack with grpc error metadata
 # requires support in grpc-java (in master but not yet released)
