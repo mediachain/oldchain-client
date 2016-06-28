@@ -4,7 +4,7 @@ REMOTE=protobuf
 BASEDIR=$(dirname $0)/..
 PROTOBUF_DIR=$BASEDIR/protobuf
 PROTOS_OUT_DIR=$BASEDIR/mediachain/proto
-VERSION="0.0.1"
+VERSION="0.1.0"
 #FILES=("Transactor.proto")
 
 mkdir -p $PROTOS_OUT_DIR
