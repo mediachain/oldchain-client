@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import os
-import json
 from mediachain.translation.translator import Translator
 
 
@@ -11,8 +10,8 @@ class GettyTranslator(Translator):
         return 'GettyTranslator/0.1'
 
     @staticmethod
-    def translate(raw_metadata):
-        getty_json = json.loads(raw_metadata, 'utf-8')
+    def translate(parsed_metadata):
+        getty_json = parsed_metadata
 
         # extract artist Entity
         artist_name = getty_json['artist']
@@ -56,3 +55,12 @@ class GettyTranslator(Translator):
     def can_translate_file(file_path):
         ext = os.path.splitext(file_path)[-1]
         return ext.lower() == '.json'
+
+    @staticmethod
+    def get_media_locations(parsed_metadata):
+        try:
+            thumb = [i['uri'] for i in parsed_metadata['display_sizes']
+                     if i['name'] == 'thumb']
+            return {'thumbnail': thumb}
+        except ValueError:
+            return {}

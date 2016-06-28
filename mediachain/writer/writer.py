@@ -1,11 +1,12 @@
 from __future__ import unicode_literals
-from os import path, walk
+
 from copy import deepcopy
 from datetime import datetime
-from base58 import b58decode
-from mediachain.datastore.dynamo import get_db
-from mediachain.translation import get_translator
 from pprint import PrettyPrinter
+
+from base58 import b58decode
+from mediachain.ingestion.media_loader import load_media
+from mediachain.datastore.dynamo import get_db
 
 
 class Writer(object):
@@ -13,66 +14,39 @@ class Writer(object):
         self.transactor = transactor
         self.datastore = datastore or get_db()
 
-    @staticmethod
-    def translate_dir(translator_id, data_dir, limit=None):
-        translator = get_translator(translator_id)
-        nn = 0
-        for dir_name, subdir_list, file_list in walk(data_dir):
-            for fn in file_list:
-                fn = path.join(dir_name, fn)
-                if not translator.can_translate_file(fn):
-                    continue
+    def write_dataset(self, dataset_iterator, download_remote_media=False):
+        translator_id = dataset_iterator.translator.translator_id()
 
-                if limit and (nn + 1 >= limit):
-                    print('ingested {} records, ending'.format(nn))
-                    return
+        for result in dataset_iterator:
+            translated = result['translated']
+            raw = result['raw_content']
+            media = load_media(result['local_media'],
+                               result['remote_media'],
+                               download_remote=download_remote_media)
 
-                with open(fn, mode='rb') as f:
-                    try:
-                        content = f.read()
-                    except IOError as e:
-                        print('error reading from {}: {}'.format(
-                            fn, str(e)
-                        ))
-                        continue
-
-                nn += 1
-                parsed = translator.parse(content)
-                translated = translator.translate(parsed)
-                yield translated, content, fn
-
-    def write_dir(self, translator_id, data_dir, limit=None,
-                  download_thumbs=False):
-        for translated, raw, filename in self.translate_dir(
-            translator_id, data_dir, limit
-        ):
-            # print("translated metadata: {}".format(
-            #     pp.pformat(translated)
-            # ))
-
-            # TODO: try to get thumbnail data
-            self.write_translated(translator_id, translated, raw)
+            self.write_translated(translator_id, translated, raw, media)
 
     def write_translated(self,
                          translator_id,
                          translated_metadata,
                          raw_metadata,
-                         thumbnail_data=None):
-        meta_source = self.datastore.put(raw_metadata)
+                         media=None):
+        meta_source = string_ref_to_map(self.datastore.put(raw_metadata))
 
         common_meta = {
-            u'translator': unicode(translator_id),
-            u'date_translated': unicode(datetime.utcnow().isoformat())
+            'translator': unicode(translator_id),
+            'date_translated': unicode(datetime.utcnow().isoformat())
         }
 
         obj = deepcopy(translated_metadata['object'])
         merge_meta(obj, common_meta)
-        if thumbnail_data is not None:
-            obj['meta']['data']['thumbnail'] = thumbnail_data
+        if media is not None:
+            media = self.write_media(media)
+            obj['meta']['data'].update(media)
 
         pp = PrettyPrinter(indent=2)
 
-        obj['metaSource'] = string_ref_to_map(meta_source)
+        obj['metaSource'] = meta_source
         print('inserting object: ')
         pp.pprint(obj)
         obj_ref = self.transactor.insert_canonical(obj)
@@ -83,6 +57,7 @@ class Writer(object):
         for r in related:
             rel = r['relationship']
             rel_obj = r['object']
+            rel_obj['metaSource'] = meta_source
             merge_meta(rel_obj, common_meta)
 
             print('inserting related entity:')
@@ -94,6 +69,7 @@ class Writer(object):
             cell = {'type': rel,
                     'ref': obj_ref.to_map(),
                     'meta': deepcopy(common_meta),
+                    'metaSource': meta_source,
                     rel_obj_type: rel_obj_ref.to_map()
                     }
 
@@ -110,6 +86,13 @@ class Writer(object):
         pp.pprint(refs)
         return refs
 
+    def write_media(self, media_data):
+        media_refs = {}
+        for name, data in media_data.iteritems():
+            ref_str = self.datastore.put(data)
+            media_refs[name] = string_ref_to_map(ref_str)
+        return media_refs
+
 
 def merge_meta(obj, meta):
     merged = {'data': {}}
@@ -123,3 +106,4 @@ def string_ref_to_map(string_ref):
     return {
         '@link': b58decode(string_ref)
     }
+

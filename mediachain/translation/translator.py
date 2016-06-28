@@ -31,11 +31,11 @@ class Translator(object):
             )
 
     @staticmethod
-    def translate(raw_metadata):
+    def translate(parsed_metadata):
         """
         Transforms the parsed metadata into a format suitable for writing to
         the mediachain network.
-        :param raw_metadata: a dict containing un-translated metadata
+        :param parsed_metadata: a dict containing un-translated metadata
         :return: a dict containing mediachain records.
 
         e.g:
@@ -63,12 +63,12 @@ class Translator(object):
         return False
 
     @staticmethod
-    def get_media_locations(raw_metadata):
+    def get_media_locations(parsed_metadata):
         """
         Return a dict containing uris for media files associated with
         the given `raw_metadata`.
 
         :return: a dict in this shape:
-        {"thumbnail": "http://example.com/thumbnail.jpg"}
+            {"thumbnail": "http://example.com/thumbnail.jpg"}
         """
         return {}

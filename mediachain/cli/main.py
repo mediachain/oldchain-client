@@ -6,9 +6,11 @@ from time import sleep
 
 from mediachain.reader import api
 from mediachain.datastore import set_use_ipfs_for_raw_data
+from mediachain.datastore.ipfs import set_ipfs_config
 from mediachain.datastore.rpc import set_rpc_datastore_config
 from mediachain.writer import Writer
-from mediachain.datastore.ipfs import set_ipfs_config
+from mediachain.translation import get_translator
+from mediachain.ingestion.getty_dump_iterator import GettyDumpIterator
 from mediachain.transactor.client import TransactorClient
 
 def main(arguments=None):
@@ -119,10 +121,21 @@ def main(arguments=None):
         api.get_and_print_object(transactor, ns.object_id)
 
     def ingest_cmd(args):
+        translator = get_translator(args.translator_id)
+
+        # FIXME: we should have a way to map translator id + ingest args to
+        #  a dataset iterator
+        if args.translator_id.startswith('Getty'):
+            iterator = GettyDumpIterator(translator, args.dir, args.max_num)
+        else:
+            raise RuntimeError(
+                "Dataset with id {} is not supported".format(args.translator_id)
+            )
+
         transactor = TransactorClient(args.host, args.port)
         writer = Writer(transactor)
-        writer.write_dir(args.translator_id, args.dir, args.max_num,
-                         args.download_thumbs)
+        writer.write_dataset(iterator,
+                             download_remote_media=args.download_thumbs)
 
     SUBCOMMANDS={
         'get': get_cmd,

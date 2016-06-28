@@ -1,5 +1,5 @@
 import cbor
-from mediachain.getty.thumbnails import make_jpeg_data_uri
+from mediachain.ingestion.media_loader import make_jpeg_data_uri
 from mediachain.datastore import get_db, get_raw_datastore
 import copy
 import base58
