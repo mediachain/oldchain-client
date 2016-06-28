@@ -7,29 +7,18 @@ from time import sleep
 from mediachain.reader import api
 from mediachain.getty import ingest
 from mediachain.datastore import set_use_ipfs_for_raw_data
-from mediachain.datastore.dynamo import set_aws_config
+from mediachain.datastore.rpc import set_rpc_datastore_config
 from mediachain.datastore.ipfs import set_ipfs_config
 from mediachain.transactor.client import TransactorClient
 
 
 def main(arguments=None):
-    def configure_aws(ns):
-        # aws configuration
-        aws = dict()
-        attrs = ['aws_access_key_id',
-                 'aws_secret_access_key',
-                 'endpoint_url',
-                 'region_name',
-                 'mediachain_table_name']
-
-        # filter unpopulated
-        for attr in attrs:
-            try:
-                aws[attr] = getattr(ns, attr)
-            except AttributeError as e:
-                pass
-
-        set_aws_config(aws)
+    def configure_datastore(ns):
+        host = getattr(ns, 'datastore_host')
+        if host is None:
+            host = getattr(ns, 'host')
+        port = getattr(ns, 'datastore_port')
+        set_rpc_datastore_config({'host': host, 'port': port})
 
     def configure_ipfs(ns):
         try:
@@ -58,49 +47,34 @@ def main(arguments=None):
                         dest='host')
     parser.add_argument('-p', '--port',
                         type=int,
-                        required=True,
+                        default=10001,
                         dest='port')
-    parser.add_argument('-r', '--region',
+    parser.add_argument('--datastore-host',
+                        dest='datastore_host',
                         type=str,
                         required=False,
-                        default='us-east-1',
-                        dest='region_name',
-                        help='AWS region of DynamoDB instance')
-    parser.add_argument('-e', '--endpoint',
-                        type=str,
-                        required=False,
-                        dest='endpoint_url',
-                        help='AWS endpoint of DynamoDB instance')
-    parser.add_argument('-k', '--key',
-                        type=str,
-                        required=False,
-                        default='',
-                        dest='aws_access_key_id',
-                        help='AWS access key ID')
-    parser.add_argument('-x', '--secret-key',
-                        type=str,
-                        required=False,
-                        default='',
-                        dest='aws_secret_access_key',
-                        help='AWS secret access key')
-    parser.add_argument('-t', '--dynamo-table',
-                        type=str,
-                        required=False,
-                        default='Mediachain',
-                        dest='mediachain_table_name',
-                        help='Name of dynamo table to work wtih')
-    parser.add_argument('-i', '--use_ipfs',
+                        help='Hostname or ip address of datastore service. ' +
+                        'If not given, will default to the value of --host')
+    parser.add_argument('--datastore-port',
+                        dest='datastore_port',
+                        type=int,
+                        default=10002,
+                        help='Port to use when connecting to the datastore ' +
+                             'service.')
+    parser.add_argument('-i', '--use-ipfs',
                         dest='use_ipfs',
                         action='store_true',
                         help='If set, upload images and raw metadata ' +
                              'to IPFS'
                         )
-    parser.add_argument('--ipfs_host',
+    parser.add_argument('--ipfs-host',
+                        dest='ipfs_host',
                         type=str,
                         default='localhost',
                         help='Hostname or ip address of IPFS api server'
                         )
-    parser.add_argument('--ipfs_port',
+    parser.add_argument('--ipfs-port',
+                        dest='ipfs_port',
                         type=int,
                         default=5001,
                         help='Port for IPFS api server')
@@ -123,13 +97,13 @@ def main(arguments=None):
     ingest_parser.add_argument('dir',
                                type=str,
                                help='Path to getty json directory root')
-    ingest_parser.add_argument('-m', '--max_entries',
+    ingest_parser.add_argument('-m', '--max-entries',
                                type=int,
                                dest='max_num',
                                help='Max json entries to parse. ' +
                                'Defaults to 0 (no maximum)',
                                default=0)
-    ingest_parser.add_argument('-d', '--download_thumbnails',
+    ingest_parser.add_argument('-d', '--download-thumbnails',
                                type=bool,
                                dest='download_thumbs',
                                help='If set, download thumbnails if not found' +
@@ -149,7 +123,7 @@ def main(arguments=None):
     ns = parser.parse_args(arguments)
     fn = SUBCOMMANDS[ns.subcommand]
 
-    configure_aws(ns)
+    configure_datastore(ns)
     configure_ipfs(ns)
 
     try:
