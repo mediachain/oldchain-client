@@ -1,6 +1,5 @@
-import cbor
-from mediachain.ingestion.media_loader import make_jpeg_data_uri
 from mediachain.datastore import get_db, get_raw_datastore
+from mediachain.ingestion.asset_loader import make_jpeg_data_uri
 import copy
 import base58
 import json
