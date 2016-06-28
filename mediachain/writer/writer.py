@@ -6,8 +6,7 @@ from base58 import b58decode
 from mediachain.ingestion.asset_loader import load_asset, process_asset
 from mediachain.translation.utils import is_asset, is_canonical, \
     is_mediachain_object
-from mediachain.datastore import get_raw_datastore
-from mediachain.datastore.dynamo import get_db
+from mediachain.datastore import get_db, get_raw_datastore
 from mediachain.datastore.data_objects import MultihashReference
 from grpc.framework.interfaces.face.face import NetworkError
 
