@@ -5,12 +5,11 @@ import traceback
 from time import sleep
 
 from mediachain.reader import api
-from mediachain.getty import ingest
 from mediachain.datastore import set_use_ipfs_for_raw_data
 from mediachain.datastore.rpc import set_rpc_datastore_config
+from mediachain.writer import Writer
 from mediachain.datastore.ipfs import set_ipfs_config
 from mediachain.transactor.client import TransactorClient
-
 
 def main(arguments=None):
     def configure_datastore(ns):
@@ -94,6 +93,10 @@ def main(arguments=None):
         'ingest',
         help='Ingest a directory of scraped Getty JSON data'
     )
+    ingest_parser.add_argument('translator_id',
+                               type=str,
+                               help='identifier for a schema translator' +
+                               'e.g. GettyTranslator/0.1')
     ingest_parser.add_argument('dir',
                                type=str,
                                help='Path to getty json directory root')
@@ -110,14 +113,20 @@ def main(arguments=None):
                                     ' on disk.',
                                default=False)
 
+
     def get_cmd(ns):
         transactor = TransactorClient(ns.host, ns.port)
         api.get_and_print_object(transactor, ns.object_id)
 
+    def ingest_cmd(args):
+        transactor = TransactorClient(args.host, args.port)
+        writer = Writer(transactor)
+        writer.write_dir(args.translator_id, args.dir, args.max_num,
+                         args.download_thumbs)
+
     SUBCOMMANDS={
         'get': get_cmd,
-        'ingest': lambda ns: ingest.ingest(ns.host, ns.port, ns.dir, ns.max_num,
-                                           ns.download_thumbs)
+        'ingest': ingest_cmd
     }
 
     ns = parser.parse_args(arguments)

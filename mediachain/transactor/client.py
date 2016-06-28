@@ -21,7 +21,7 @@ class TransactorClient(object):
     def insert_canonical(self, record, timeout=TIMEOUT_SECS):
         try:
             cbor_bytes = record.to_cbor_bytes()
-        except NameError:
+        except AttributeError:
             cbor_bytes = cbor.dumps(record)
 
         req = Transactor_pb2.InsertRequest(canonicalCbor=cbor_bytes)
@@ -40,7 +40,7 @@ class TransactorClient(object):
     def update_chain(self, cell, timeout=TIMEOUT_SECS):
         try:
             cbor_bytes = cell.to_cbor_bytes()
-        except NameError:
+        except AttributeError:
             cbor_bytes = cbor.dumps(cell)
 
         req = Transactor_pb2.UpdateRequest(chainCellCbor=cbor_bytes)
