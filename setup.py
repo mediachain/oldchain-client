@@ -35,4 +35,6 @@ setup(
     url='http://mediachain.io',
     install_requires=reqs,
     cmdclass={'install': install},
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
 )

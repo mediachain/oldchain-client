@@ -4,6 +4,8 @@ from copy import deepcopy
 import re
 from base58 import b58decode
 from mediachain.ingestion.asset_loader import load_asset, process_asset
+from mediachain.translation.utils import is_asset, is_canonical, \
+    is_mediachain_object
 from mediachain.datastore import get_raw_datastore
 from mediachain.datastore.dynamo import get_db
 from mediachain.datastore.data_objects import MultihashReference
@@ -117,24 +119,6 @@ class Writer(object):
                 raise
 
         return MultihashReference.from_base58(ref_str)
-
-
-def is_tagged_dict(tag, value):
-    if not isinstance(value, dict):
-        return False
-    return tag in value
-
-
-def is_asset(value):
-    return is_tagged_dict('__mediachain_asset__', value)
-
-
-def is_mediachain_object(value):
-    return is_tagged_dict('__mediachain_object__', value)
-
-
-def is_canonical(obj):
-    return obj['type'] == 'artefact' or obj['type'] == 'entity'
 
 
 def merge_meta(obj, meta):
