@@ -10,6 +10,7 @@ install:
   - pip install pylint
 script:
   - pylint --errors-only --disable=print-statement,catching-non-exception mediachain
+  - python setup.py test
 notifications:
   slack: mediachain:gzFe4w4HwIlNnxaHy1vAKW3q
   on_success: change
