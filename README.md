@@ -1,7 +1,7 @@
 # mediachain-client
 
-A minimal client for reading data from and importing data into the current
-Mediachain prototype.
+A client library and minimal command line interface for reading data from and 
+importing data into the current Mediachain prototype.
 
 ## Installation
 ```
@@ -10,7 +10,7 @@ pip install .
 
 This will install the `mediachain` command the the mediachain python module.
 
-## Usage
+## Command Line Usage
 
 ### Configuration
 
@@ -50,21 +50,38 @@ mediachain [config-options] get <record-id>
 This will return an up-to-date view of the base record with the given id,
 with all statements in its chain of updates applied.
 
-
 ### Writing
-A "black box" translator for the Getty Images dataset is currently supported.
+The command line tool supports ingesting datasets for which a "translator"
+exists.  The translator consumes data in its raw format and outputs a
+description of the mediachain records and raw media assets to store in
+the mediachain network.  The translator output format is 
+[detailed below](#translator-format).  To use an existing translator, invoke
+the command line `ingest` command, passing the id of a translator and the
+location of the raw metadata.
 
-This client walks a directory containing JSON metadata obtained from the
-Getty images API, submitting mediachain records to the transactor network.
-
-You can invoke the importer like so:
+```bash
+mediachain [config-options] ingest <translator-id> <metadata-location>
 ```
-mediachain [config-options] ingest <getty-json-dir>
+
+The client will run the metadata through the given translator and write the
+resulting mediachain records to the transactor network, and will write the
+raw metadata to the distributed datastore.
+
+### Metadata Translation
+
+A translator for the Getty Images dataset is currently supported.
+
+To use it, invoke the `mediachain` client with the translator id 
+`GettyTranslator/0.1` and pass in a path to a local directory containing
+JSON data from the Getty Images API as the `metadata-location`:
+
+```bash
+mediachain [config-options] ingest GettyTranslator/0.1 ~/datasets/getty
 ```
 
-The `<getty-json-dir>` argument should be a path to the root of a directory
-structure containing getty json metadata, with one json file per record.
+## Internals
 
+TBD
 
 ## Known issues
 
