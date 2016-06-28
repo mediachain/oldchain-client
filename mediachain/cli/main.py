@@ -49,28 +49,32 @@ def main(arguments=None):
                         type=int,
                         default=10001,
                         dest='port')
-    parser.add_argument('--datastore_host',
+    parser.add_argument('--datastore-host',
+                        dest='datastore_host',
                         type=str,
                         required=False,
                         help='Hostname or ip address of datastore service. ' +
                         'If not given, will default to the value of --host')
-    parser.add_argument('--datastore_port',
+    parser.add_argument('--datastore-port',
+                        dest='datastore_port',
                         type=int,
                         default=10002,
                         help='Port to use when connecting to the datastore ' +
                              'service.')
-    parser.add_argument('-i', '--use_ipfs',
+    parser.add_argument('-i', '--use-ipfs',
                         dest='use_ipfs',
                         action='store_true',
                         help='If set, upload images and raw metadata ' +
                              'to IPFS'
                         )
-    parser.add_argument('--ipfs_host',
+    parser.add_argument('--ipfs-host',
+                        dest='ipfs_host',
                         type=str,
                         default='localhost',
                         help='Hostname or ip address of IPFS api server'
                         )
-    parser.add_argument('--ipfs_port',
+    parser.add_argument('--ipfs-port',
+                        dest='ipfs_port',
                         type=int,
                         default=5001,
                         help='Port for IPFS api server')
@@ -93,13 +97,13 @@ def main(arguments=None):
     ingest_parser.add_argument('dir',
                                type=str,
                                help='Path to getty json directory root')
-    ingest_parser.add_argument('-m', '--max_entries',
+    ingest_parser.add_argument('-m', '--max-entries',
                                type=int,
                                dest='max_num',
                                help='Max json entries to parse. ' +
                                'Defaults to 0 (no maximum)',
                                default=0)
-    ingest_parser.add_argument('-d', '--download_thumbnails',
+    ingest_parser.add_argument('-d', '--download-thumbnails',
                                type=bool,
                                dest='download_thumbs',
                                help='If set, download thumbnails if not found' +
