@@ -15,11 +15,14 @@ def load_asset(asset):
     if uri.lower().startswith('file://'):
         p = urlparse(uri)
         file_path = os.path.abspath(os.path.join(p.netloc, p.path))
+        if not os.path.isfile(file_path):
+            return None
         try:
             with open(file_path) as f:
                 return f.read()
         except IOError as e:
             print('error reading from {}: {}'.format(file_path, e))
+            return
 
     try:
         r = requests.get(uri)
