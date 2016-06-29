@@ -6,7 +6,7 @@ from mediachain.ingestion.asset_loader import load_asset, process_asset
 from mediachain.translation.utils import is_asset, is_canonical, \
     is_mediachain_object
 from mediachain.datastore import get_db, get_raw_datastore
-from grpc.framework.interfaces.face.face import NetworkError
+from grpc.framework.interfaces.face.face import AbortionError
 from mediachain.datastore.utils import multihash_ref
 
 class Writer(object):
@@ -109,7 +109,7 @@ class Writer(object):
                 return self.transactor.insert_canonical(obj)
             else:
                 return self.transactor.update_chain(obj)
-        except NetworkError as e:
+        except AbortionError as e:
             ref_str = duplicate_canonical_ref(e.details)
             if ref_str is None:
                 raise
