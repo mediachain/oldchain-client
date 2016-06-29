@@ -1,7 +1,13 @@
 import base58
 import cbor
+import multihash
 from mediachain.proto import Types_pb2  # pylint: disable=no-name-in-module
 from mediachain.datastore.data_objects import MultihashReference
+
+
+def multihash_ref_for_bytes(byte_string):
+    hash_bytes = multihash.encode(bytes(byte_string), multihash.SHA2_256)
+    return MultihashReference(multihash=bytes(hash_bytes))
 
 
 def multihash_ref(ref):
