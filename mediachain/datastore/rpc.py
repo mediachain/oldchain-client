@@ -1,11 +1,11 @@
 import functools
-import multihash
 from grpc.beta import implementations
 from grpc.beta.interfaces import StatusCode
 from grpc.framework.interfaces.face.face import AbortionError
 from mediachain.proto import Datastore_pb2  # pylint: disable=no-name-in-module
+from mediachain.datastore.data_objects import MultihashReference
 from mediachain.datastore.utils import rpc_ref, multihash_ref, \
-    bytes_for_object, object_for_bytes, multihash_ref_for_bytes
+    bytes_for_object, object_for_bytes
 from mediachain.rpc.utils import with_retry
 
 TIMEOUT_SECS = 120
@@ -61,7 +61,7 @@ class RpcDatastore(object):
     def put(self, data_object, timeout=TIMEOUT_SECS):
         put_with_retry = functools.partial(with_retry, self.rpc.put)
         byte_string = bytes_for_object(data_object)
-        content_hash = multihash_ref_for_bytes(byte_string)
+        content_hash = MultihashReference.for_content(byte_string)
         if content_hash.multihash in self.put_cache:
             return content_hash
 

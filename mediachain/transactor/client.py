@@ -1,8 +1,7 @@
 import cbor
 from grpc.beta import implementations
 
-from mediachain.datastore.data_objects import Artefact, Entity, ChainCell, \
-    MultihashReference
+from mediachain.datastore.data_objects import MultihashReference
 from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
 from mediachain.proto import Types_pb2  # pylint: disable=no-name-in-module
 import mediachain.reader.api as reader

@@ -1,8 +1,7 @@
 import ipfsApi
-import cbor
 from tempfile import NamedTemporaryFile
-from mediachain.datastore.data_objects import Record, MultihashReference
-
+from mediachain.datastore.data_objects import MultihashReference
+from mediachain.datastore.utils import multihash_ref, object_for_bytes
 
 __IPFS_CONFIG = {'host': 'localhost', 'port': 5001}
 
@@ -27,9 +26,9 @@ class IpfsDatastore(object):
         self.client = ipfsApi.Client(host, port)
 
     def put(self, data_object):
-        if isinstance(data_object, Record):
+        try:
             content = data_object.to_cbor_bytes()
-        else:
+        except AttributeError:
             content = data_object
 
         with NamedTemporaryFile() as f:
@@ -52,15 +51,10 @@ class IpfsDatastore(object):
 
         name = header['Name']
         hashes = [h['Hash'] for h in result if h['Name'] == name]
-        return hashes[0]
+        return multihash_ref(hashes[0])
 
     def get(self, ref):
-        if isinstance(ref, MultihashReference):
-            ref_multihash = ref.multihash_base58()
-        else:
-            ref_multihash = ref
-
-        stream = self.client.cat(ref_multihash, stream=True)
+        stream = self.client.cat(str(ref), stream=True)
         byte_string = stream.read()
-        return byte_string
+        return object_for_bytes(byte_string)
 
