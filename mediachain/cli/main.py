@@ -7,7 +7,7 @@ from time import sleep
 from mediachain.reader import api
 from mediachain.datastore import set_use_ipfs_for_raw_data
 from mediachain.datastore.ipfs import set_ipfs_config
-from mediachain.datastore.rpc import set_rpc_datastore_config
+from mediachain.datastore.rpc import set_rpc_datastore_config, close_db
 from mediachain.writer import Writer
 from mediachain.translation import get_translator
 from mediachain.ingestion.getty_dump_iterator import GettyDumpIterator
@@ -149,6 +149,7 @@ def main(arguments=None):
 
     try:
         fn(ns)
+        close_db()
     except KeyboardInterrupt:
         for line in traceback.format_exception(*sys.exc_info()):
             print line,

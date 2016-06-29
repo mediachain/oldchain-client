@@ -10,6 +10,7 @@ from mediachain.rpc.utils import with_retry
 TIMEOUT_SECS = 120
 
 __RPC_STORE_CONFIG = None
+__RPC_STORE_INSTANCE = None
 
 
 def set_rpc_datastore_config(cfg):
@@ -23,6 +24,10 @@ def get_rpc_datastore_config():
 
 
 def get_db():
+    global __RPC_STORE_INSTANCE
+    if __RPC_STORE_INSTANCE is not None:
+        return __RPC_STORE_INSTANCE
+
     cfg = get_rpc_datastore_config()
     try:
         host = cfg['host']
@@ -32,7 +37,18 @@ def get_db():
                            'please call set_rpc_datastore_config before ' +
                            'calling get_db')
 
-    return RpcDatastore(host, port)
+    __RPC_STORE_INSTANCE = RpcDatastore(host, port)
+    return __RPC_STORE_INSTANCE
+
+
+def close_db():
+    """
+    Cleanup the global RpcDatastore instance.
+    Must be called before program exit, otherwise the connection will never
+    be closed, and grpc will hang indefinitely.
+    """
+    global __RPC_STORE_INSTANCE
+    __RPC_STORE_INSTANCE = None
 
 
 class RpcDatastore(object):
