@@ -66,7 +66,7 @@ class Writer(object):
             local = local_assets.get(k, None)
             ref = self.store_asset(k, local, a)
             if ref is None:
-                print('Unable to store asset with key {}, removing'.format(k))
+                # print('Unable to store asset with key {}, removing'.format(k))
                 del record[k]
             else:
                 record[k] = ref.to_map()
