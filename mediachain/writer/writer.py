@@ -36,19 +36,19 @@ class Writer(object):
 
         raw_ref = self.store_raw(raw_content)
 
-        common_meta = {'translator': translator_id,
-                       'raw_ref': raw_ref.to_map()}
+        common_meta = {'translator': translator_id}
+        canonical_meta = common_meta.copy()
+        canonical_meta.update({'raw_ref': raw_ref.to_map()})
 
         canonical = translated['canonical']
-        canonical = self.flatten_record(canonical, common_meta,
-                                        meta_source, local_assets)
+        canonical = self.flatten_record(canonical, canonical_meta,
+                                        local_assets, meta_source=meta_source)
         canonical_ref = self.submit_object(canonical)
 
         chain = translated.get('chain', [])
         chain_refs = []
         for cell in chain:
-            cell = self.flatten_record(cell, common_meta,
-                                       meta_source, local_assets)
+            cell = self.flatten_record(cell, common_meta, local_assets)
             cell['ref'] = canonical_ref.to_map()
             chain_ref = self.submit_object(cell)
             chain_refs += chain_ref.multihash_base58()
@@ -57,7 +57,8 @@ class Writer(object):
             'chain': chain_refs
         }
 
-    def flatten_record(self, record, common_meta, meta_source, local_assets):
+    def flatten_record(self, record, common_meta, local_assets,
+                       meta_source=None):
         record = deepcopy(record)
         assets = {k: v for k, v in record.iteritems()
                   if is_asset(v)}
@@ -85,7 +86,10 @@ class Writer(object):
 
         if is_mediachain_object(record):
             del record['__mediachain_object__']
-            record['metaSource'] = meta_source.to_map()
+            try:
+                record['metaSource'] = meta_source.to_map()
+            except (TypeError, AttributeError):
+                pass
             record['meta'].update(common_meta)
         return record
 
