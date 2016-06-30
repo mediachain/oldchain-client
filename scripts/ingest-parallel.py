@@ -17,7 +17,13 @@ def ingest(ns):
         print "Ingest %s" % adir
         proc = subprocess.Popen([ns.script, adir])
         pids.add(proc.pid)
-
+    
+    while len(pids) > 0:
+        try:
+            (pid, status) = os.wait()
+            pids.remove(pid)
+        except OSError, e:
+            break
 
 def main(args):
     parser = argparse.ArgumentParser(
