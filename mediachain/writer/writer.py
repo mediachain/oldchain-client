@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from __future__ import print_function
 
 from copy import deepcopy
 import re
@@ -8,6 +9,13 @@ from mediachain.translation.utils import is_asset, is_canonical, \
 from mediachain.datastore import get_db, get_raw_datastore
 from grpc.framework.interfaces.face.face import AbortionError
 from mediachain.datastore.utils import multihash_ref
+import sys
+import traceback
+
+
+def print_err(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 
 class Writer(object):
     def __init__(self, transactor, datastore=None,
@@ -23,9 +31,13 @@ class Writer(object):
             translated = result['translated']
             raw = result['raw_content']
             local_assets = result.get('local_assets', {})
-            refs = self.submit_translator_output(translator_id, translated,
-                                                 raw, local_assets)
-            print('Inserted canonical: {}'.format(refs['canonical']))
+            try:
+                refs = self.submit_translator_output(translator_id, translated,
+                                                     raw, local_assets)
+                print('Inserted canonical: {}'.format(refs['canonical']))
+            except AbortionError:
+                for line in traceback.format_exception(*sys.exc_info()):
+                    print_err(line.rstrip('\n'))
 
     def submit_translator_output(self,
                                  translator_id,
