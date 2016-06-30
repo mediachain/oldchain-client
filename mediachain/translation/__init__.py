@@ -1,0 +1,1 @@
+from lookup import get_translator
