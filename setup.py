@@ -27,6 +27,7 @@ setup(
     description='mediachain reader command line interface',
     author='Mediachain Labs',
     packages=find_packages('.'),
+    author_email = 'hello@mediachainlabs.com',
     entry_points={
         'console_scripts': [
             'mediachain = mediachain.cli.main:main'
