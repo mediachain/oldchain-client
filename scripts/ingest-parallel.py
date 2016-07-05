@@ -1,6 +1,7 @@
 import sys
 import os
 import subprocess
+import time
 import argparse
 
 def ingest_dirs(top):
@@ -9,21 +10,35 @@ def ingest_dirs(top):
             yield dirpath
 
 def ingest(ns):
-    pids = set()
-    for adir in ingest_dirs(ns.dir):
-        if (len(pids) >= ns.procs):
-            (pid, status) = os.wait()
-            pids.remove(pid)
+    procs = dict()
+    def spawn(adir):
         print "Ingest %s" % adir
         proc = subprocess.Popen([ns.script, adir])
-        pids.add(proc.pid)
+        procs[proc.pid] = proc
+    
+    def reap_some():
+        done = []
+        while True:
+            for (pid, proc) in procs.items():
+                if proc.poll() is not None:
+                    done.append(pid)
+            
+            if len(done) > 0:
+                for pid in done:
+                    del procs[pid]
+                break
+            else:
+                time.sleep(1)
+        
+    for adir in ingest_dirs(ns.dir):
+        if (len(procs) < ns.procs):
+            spawn(adir)
+        else:
+            reap_some()
+            spawn(adir)
     
     while len(pids) > 0:
-        try:
-            (pid, status) = os.wait()
-            pids.remove(pid)
-        except OSError, e:
-            break
+        reap_some()
 
 def main(args):
     parser = argparse.ArgumentParser(
