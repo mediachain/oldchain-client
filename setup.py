@@ -12,7 +12,7 @@ with open(reqs_file) as f:
 
 def _pre_install(dir):
     from subprocess import check_call
-    check_call(['scripts/build_grpc.sh'],
+    check_call(['scripts/build_grpc.sh', sys.executable],
             cwd=dir) 
 
 class install(_install):
