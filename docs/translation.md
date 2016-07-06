@@ -1,7 +1,7 @@
 
 # Schema translation for mediachain records
 
-This document is an overview of the schema ingestion and translation process
+This document is an overview of the data ingestion and translation process
  in the mediachain client library.  This is a work in progress, and will be
  updated as needed to reflect changes to the interfaces and data formats.
 
@@ -121,7 +121,7 @@ records being written to the datastore:
 }
 ```
 
-There are two special keys indicate to the writer that the containing objects
+There are two special keys that indicate to the writer that the containing objects
 need special processing.  Dictionaries tagged with `__mediachain_object__`
 will be submitted to the transactor network, and they will be replaced by
 a multihash link in the containing object.
@@ -132,7 +132,7 @@ The same is true of objects tagged with `__mediachain_asset__`, however instead
  by the translator may be superseded by local assets from the `DatasetIterator`
  if they exist.
 
-The tagged objects are submitted to the transactor depth-first, and the
+The tagged objects are submitted depth-first, and the
 `canonical` is submitted before any entries in the `chain`.  So in the above
 example, first the `thumbnail` asset would be sent to the datastore, and the
 asset description object would be replaced with a multihash link, resulting in
