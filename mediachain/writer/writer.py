@@ -38,11 +38,14 @@ class Writer(object):
                        'translated': translated,
                        'raw_content': raw,
                        'refs': refs}
-            except AbortionError as e:
+            except Exception as e:
+                error_code = getattr(e, 'code')
+                error_details = getattr(e, 'details', e.message)
+
                 trace = traceback.format_exception(*sys.exc_info())
                 yield {'success': False,
-                       'error_code': str(e.code),
-                       'error_details': e.details,
+                       'error_code': error_code,
+                       'error_details': error_details,
                        'error_traceback': trace,
                        'translated': translated,
                        'raw_content': raw}
