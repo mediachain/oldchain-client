@@ -134,7 +134,9 @@ def main(arguments=None):
 
         transactor = TransactorClient(args.host, args.port)
         writer = Writer(transactor, download_remote_assets=args.download_thumbs)
-        writer.write_dataset(iterator)
+
+        for refs in writer.write_dataset(iterator):
+            print('Inserted canonical: {}'.format(refs['canonical']))
 
     SUBCOMMANDS={
         'get': get_cmd,

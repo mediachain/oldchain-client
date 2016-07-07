@@ -34,7 +34,7 @@ class Writer(object):
             try:
                 refs = self.submit_translator_output(translator_id, translated,
                                                      raw, local_assets)
-                print('Inserted canonical: {}'.format(refs['canonical']))
+                yield refs
             except AbortionError:
                 for line in traceback.format_exception(*sys.exc_info()):
                     print_err(line.rstrip('\n'))
