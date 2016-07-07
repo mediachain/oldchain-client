@@ -37,6 +37,7 @@ class Writer(object):
                 yield {'success': True,
                        'translated': translated,
                        'raw_content': raw,
+                       'parsed': result['parsed'],
                        'refs': refs}
             except Exception as e:
                 error_code = getattr(e, 'code')
@@ -48,7 +49,8 @@ class Writer(object):
                        'error_details': error_details,
                        'error_traceback': trace,
                        'translated': translated,
-                       'raw_content': raw}
+                       'raw_content': raw,
+                       'parsed': result['parsed']}
 
 
     def submit_translator_output(self,
