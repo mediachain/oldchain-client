@@ -7,7 +7,7 @@ before_install:
 install:
   - pip install --upgrade pip
   - pip install -r requirements.txt
-  - pip install pylint
+  - pip install pylint==1.5.6
 script:
   - pylint --errors-only --disable=print-statement,catching-non-exception mediachain && python setup.py test
 notifications:
