@@ -28,6 +28,10 @@ class Writer(object):
         translator_id = dataset_iterator.translator.translator_id()
 
         for result in dataset_iterator:
+            if not result.get('success'):
+                yield result
+                continue
+
             translated = result['translated']
             raw = result['raw_content']
             local_assets = result.get('local_assets', {})

@@ -22,13 +22,8 @@ class Translator(object):
         :param raw_metadata_bytes: a bytestring containing the raw metadata
         :return: a dict representation of the raw metadata
         """
-        try:
-            return json.loads(raw_metadata_bytes, 'utf-8')
-        except (TypeError, ValueError):
-            raise NotImplementedError(
-                "subclasses should parse raw metadata if they accept formats" +
-                " other than utf-8 json text"
-            )
+        return json.loads(raw_metadata_bytes, 'utf-8')
+
 
     @staticmethod
     def translate(parsed_metadata):

@@ -149,10 +149,10 @@ def main(arguments=None):
                     id=record_id
                 ))
                 print('Error code: {error_code}. Details: {details}'.format(
-                    error_code=result['error_code'],
-                    details=result['error_details']
+                    error_code=result.get('error_code', 'none'),
+                    details=result.get('error_details', 'none')
                 ))
-                print(''.join(result['error_traceback']))
+                print(''.join(result.get('error_traceback', [])))
 
     SUBCOMMANDS={
         'get': get_cmd,
