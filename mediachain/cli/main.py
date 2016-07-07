@@ -4,6 +4,15 @@ import os
 import traceback
 from time import sleep
 
+# Set the GRPC log level to ERROR, unless it's already been set
+# This needs to happen before importing anything that will
+# import grpc, since it reads the environment var immediately on import
+def set_grpc_verbosity():
+    level = os.environ.get('GRPC_VERBOSITY', 'ERROR')
+    os.environ['GRPC_VERBOSITY'] = level
+
+set_grpc_verbosity()
+
 from mediachain.reader import api
 from mediachain.datastore import set_use_ipfs_for_raw_data
 from mediachain.datastore.ipfs import set_ipfs_config
@@ -12,6 +21,7 @@ from mediachain.writer import Writer
 from mediachain.translation import get_translator
 from mediachain.ingestion.getty_dump_iterator import GettyDumpIterator
 from mediachain.transactor.client import TransactorClient
+
 
 def main(arguments=None):
     def configure_datastore(ns):
