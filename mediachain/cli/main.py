@@ -135,8 +135,24 @@ def main(arguments=None):
         transactor = TransactorClient(args.host, args.port)
         writer = Writer(transactor, download_remote_assets=args.download_thumbs)
 
-        for refs in writer.write_dataset(iterator):
-            print('Inserted canonical: {}'.format(refs['canonical']))
+        for result in writer.write_dataset(iterator):
+            if result['success']:
+                refs = result['refs']
+                print('Inserted canonical: {}'.format(refs['canonical']))
+            else:
+                try:
+                    record_id = result['translated']['canonical']['meta']['data']['_id']
+                except LookupError:
+                    record_id = 'unknown'
+
+                print('Error inserting record with id {id}: '.format(
+                    id=record_id
+                ))
+                print('Error code: {error_code}. Details: {details}'.format(
+                    error_code=result['error_code'],
+                    details=result['error_details']
+                ))
+                print(''.join(result['error_traceback']))
 
     SUBCOMMANDS={
         'get': get_cmd,

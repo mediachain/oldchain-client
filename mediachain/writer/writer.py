@@ -34,10 +34,19 @@ class Writer(object):
             try:
                 refs = self.submit_translator_output(translator_id, translated,
                                                      raw, local_assets)
-                yield refs
-            except AbortionError:
-                for line in traceback.format_exception(*sys.exc_info()):
-                    print_err(line.rstrip('\n'))
+                yield {'success': True,
+                       'translated': translated,
+                       'raw_content': raw,
+                       'refs': refs}
+            except AbortionError as e:
+                trace = traceback.format_exception(*sys.exc_info())
+                yield {'success': False,
+                       'error_code': str(e.code),
+                       'error_details': e.details,
+                       'error_traceback': trace,
+                       'translated': translated,
+                       'raw_content': raw}
+
 
     def submit_translator_output(self,
                                  translator_id,
