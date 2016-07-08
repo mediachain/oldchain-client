@@ -1,4 +1,6 @@
 language: python
+sudo: required
+dist: trusty
 before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get -qq update
