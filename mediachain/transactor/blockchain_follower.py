@@ -50,13 +50,12 @@ class BlockchainFollower(object):
                 return
             self.ref_queue.put(chain)
 
-    def events(self):
+    def events(self, timeout=None):
         if self.replay_stack is None:
             return
 
-        #  FIXME: add timeout to this to avoid blocking forever!
-        while not self.caught_up:
-            time.sleep(0.2)
+        # block until catchup thread completes
+        self.catchup_thread.join(timeout=timeout)
 
         for block_ref in self.replay_stack:
             block = self.cache.get(block_ref)
