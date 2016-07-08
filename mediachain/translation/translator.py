@@ -55,7 +55,7 @@ class Translator(object):
     @classmethod
     def translate(cls, parsed_metadata):
         res = cls._translate(parsed_metadata)
-        cls.validate(res) and res
+        cls.validate(res['canonical']) and res
 
     @staticmethod
     def can_translate_file(file_path):
