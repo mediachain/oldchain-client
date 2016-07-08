@@ -3,10 +3,13 @@ import time
 from base58 import b58encode
 from Queue import Queue
 from collections import deque
-
+from mediachain.transactor.block_cache import BlockCache
 
 class BlockchainFollower(object):
-    def __init__(self, block_cache, starting_block_ref, replay_entries=True):
+    def __init__(self, starting_block_ref, block_cache = None, replay_entries=True):
+        if block_cache is None:
+            block_cache = BlockCache()
+
         self.cache = block_cache
         self.ref_queue = Queue()
         self.caught_up = False

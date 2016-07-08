@@ -51,7 +51,7 @@ def bytes_for_object(obj):
     except AttributeError:
         pass
 
-    if isinstance(object, dict):
+    if isinstance(obj, dict):
         try:
             return cbor.dumps(obj)
         except ValueError:
