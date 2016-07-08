@@ -17,6 +17,6 @@ notifications:
   on_success: change
   on_failure: change
 cache:
-  - pip
+  pip: true
   directories:
     - $HOME/src-dependencies
