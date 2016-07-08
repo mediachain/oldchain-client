@@ -1,4 +1,5 @@
 import json
+from jsonschema import validate as validate_schema
 
 
 class Translator(object):
@@ -31,7 +32,7 @@ class Translator(object):
             )
 
     @staticmethod
-    def translate(parsed_metadata):
+    def _translate(parsed_metadata):
         """
         Transforms the parsed metadata into a format suitable for writing to
         the mediachain network.
@@ -51,6 +52,11 @@ class Translator(object):
             "subclasses should return dictionary of translated metadata"
         )
 
+    @classmethod
+    def translate(cls, parsed_metadata):
+        res = cls._translate(parsed_metadata)
+        cls.validate(res) and res
+
     @staticmethod
     def can_translate_file(file_path):
         """
@@ -61,3 +67,7 @@ class Translator(object):
         """
 
         return False
+
+    @staticmethod
+    def validate(json):
+        validate_schema(json, { "additionalProperties": False })

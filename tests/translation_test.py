@@ -33,7 +33,8 @@ def raises_on_nonsense(translator):
 def test_raises_on_nonsense():
     for translator_id in _TRANSLATOR_IDS:
         translator = get_translator(translator_id)
-        assert(raises_on_nonsense(translator))
+        with pytest.raises(ValidationError):
+            translator.validate({ 'some' : 'nonsense' })
 
 
 @pytest.fixture(params=_TRANSLATOR_IDS)
