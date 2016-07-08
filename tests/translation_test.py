@@ -7,6 +7,8 @@ from mediachain.translation.utils import is_mediachain_object, is_canonical, \
 from mediachain.ingestion.directory_iterator import DirectoryIterator
 from mediachain.ingestion.getty_dump_iterator import GettyDumpIterator
 
+from jsonschema import ValidationError
+
 _TRANSLATOR_IDS = _TRANSLATORS.keys()
 
 
@@ -23,6 +25,15 @@ def get_iterator(data_dir, translator):
     if translator_id.startswith('Getty'):
         return GettyDumpIterator(translator, dir_path)
     return DirectoryIterator(translator, dir_path)
+
+def raises_on_nonsense(translator):
+    with pytest.raises(ValidationError):
+        translator.validate({ 'some' : 'nonsense' })
+
+def test_raises_on_nonsense():
+    for translator_id in _TRANSLATOR_IDS:
+        translator = get_translator(translator_id)
+        assert(raises_on_nonsense(translator))
 
 
 @pytest.fixture(params=_TRANSLATOR_IDS)
@@ -75,3 +86,4 @@ def assert_has_meta_and_type(obj):
         'Translated object must have "type" string'
     assert isinstance(obj['meta'], dict), \
         'Translated object must have "meta" dictionary'
+
