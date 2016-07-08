@@ -13,17 +13,20 @@ class SimpleTranslator(Translator):
         simple_json = parsed_metadata
 
         # extract artist Entity
-        artist_name = simple_json['artist']
+        try:
+            artist_name = simple_json['artist']
 
-        artist_entity = {
-            u'__mediachain_object__': True,
-            u'type': u'entity',
-            u'meta': {
-                u'data': {
-                    u'name': artist_name
+            artist_entity = {
+                u'__mediachain_object__': True,
+                u'type': u'entity',
+                u'meta': {
+                    u'data': {
+                        u'name': artist_name
+                    }
                 }
             }
-        }
+        except KeyError:
+            artist_entity = None
 
         # extract artwork Artefact
         data = simple_json
@@ -44,15 +47,17 @@ class SimpleTranslator(Translator):
             u'meta': {'data': data}
         }
 
+        chain = []
+        if artist_entity is not None:
+            chain.append({u'__mediachain_object__': True,
+                          u'type': u'artefactCreatedBy',
+                          u'meta': {},
+                          u'entity': artist_entity
+                          })
+
         return {
             u'canonical': artwork_artefact,
-            u'chain': [
-                {u'__mediachain_object__': True,
-                 u'type': u'artefactCreatedBy',
-                 u'meta': {},
-                 u'entity': artist_entity
-                 }
-            ]
+            u'chain': chain
         }
 
     @staticmethod
