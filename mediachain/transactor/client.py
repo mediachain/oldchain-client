@@ -4,7 +4,9 @@ from grpc.beta import implementations
 from mediachain.datastore.data_objects import MultihashReference
 from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
 from mediachain.proto import Types_pb2  # pylint: disable=no-name-in-module
+from mediachain.transactor.blockchain_follower import BlockchainFollower
 import mediachain.reader.api as reader
+
 
 TIMEOUT_SECS = 120
 
@@ -46,9 +48,16 @@ class TransactorClient(object):
         ref = self.client.UpdateChain(req, timeout)
         return MultihashReference.from_base58(ref.reference)
 
-    def journal_stream(self, timeout=TIMEOUT_SECS):
+    def journal_stream(self, catchup=True, timeout=None):
         req = Transactor_pb2.JournalStreamRequest()
-        return self.client.JournalStream(req, timeout)
+        stream = self.client.JournalStream(req, timeout)
+        if catchup:
+            # TODO: store block cache in a persistent location, reuse
+            follower = BlockchainFollower(stream)
+            follower.start()
+            return follower
+        else:
+            return stream
 
     def canonical_stream(self, timeout=TIMEOUT_SECS):
         for event in self.journal_stream(timeout):
@@ -56,3 +65,4 @@ class TransactorClient(object):
                 ref = event.updateChainEvent.canonical.reference
                 obj = reader.get_object(self, ref)
                 yield obj
+
