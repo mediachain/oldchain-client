@@ -54,7 +54,7 @@ def main(arguments=None):
 
     parser.add_argument('-s', '--host',
                         type=str,
-                        required=True,
+                        default='facade.mediachain.io',
                         dest='host')
     parser.add_argument('-p', '--port',
                         type=int,
