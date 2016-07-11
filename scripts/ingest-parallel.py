@@ -37,7 +37,7 @@ def ingest(ns):
             reap_some()
             spawn(adir)
     
-    while len(pids) > 0:
+    while len(procs) > 0:
         reap_some()
 
 def main(args):
