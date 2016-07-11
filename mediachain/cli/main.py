@@ -58,7 +58,7 @@ def main(arguments=None):
                         dest='host')
     parser.add_argument('-p', '--port',
                         type=int,
-                        default='10001',
+                        default=10001,
                         dest='port')
     parser.add_argument('--datastore-host',
                         dest='datastore_host',
