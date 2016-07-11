@@ -1,22 +1,15 @@
 import cbor
-from contextlib import contextmanager
 from grpc.beta import implementations
 
 from mediachain.datastore.data_objects import MultihashReference
 from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
 from mediachain.proto import Types_pb2  # pylint: disable=no-name-in-module
 from mediachain.transactor.blockchain_follower import BlockchainFollower
+from mediachain.transactor.stream_consumer import JournalStreamConsumer
 import mediachain.reader.api as reader
 
 
 TIMEOUT_SECS = 120
-
-@contextmanager
-def canceling(rpc_stream):
-    try:
-        yield rpc_stream
-    finally:
-        rpc_stream.cancel()
 
 
 class TransactorClient(object):
@@ -62,13 +55,12 @@ class TransactorClient(object):
         if catchup:
             # TODO: store block cache in a persistent location, reuse
             follower = BlockchainFollower(stream)
-            follower.start()
-            return follower
+            return JournalStreamConsumer(follower)
         else:
-            return canceling(stream)
+            return JournalStreamConsumer(stream)
 
-    def canonical_stream(self, timeout=TIMEOUT_SECS):
-        for event in self.journal_stream(timeout):
+    def canonical_stream(self, timeout=None):
+        for event in self.journal_stream(timeout=timeout):
             if event.WhichOneof("event") == "updateChainEvent":
                 ref = event.updateChainEvent.canonical.reference
                 obj = reader.get_object(self, ref)

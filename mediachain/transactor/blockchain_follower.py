@@ -53,6 +53,7 @@ class BlockchainFollower(object):
         # print('BlockchainFollower cancel')
         self._cancelled = True
         self.block_ref_queue.put('__abort__')
+        self.incoming_event_queue.put('__abort__')
         self.journal_stream.cancel()
 
     def _perform_catchup(self):
@@ -90,7 +91,7 @@ class BlockchainFollower(object):
                 self.incoming_event_queue.put(event)
         except AbortionError as e:
             if self._cancelled and e.code == StatusCode.CANCELLED:
-                pass
+                return
             else:
                 raise
 
@@ -109,7 +110,10 @@ class BlockchainFollower(object):
             yield block_event
 
         while True:
-            yield self.incoming_event_queue.get()
+            e = self.incoming_event_queue.get()
+            if e == '__abort__':
+                return
+            yield e
 
 
 def chain_ref(block):
