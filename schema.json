@@ -1,0 +1,167 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "source_name": {
+          "type": "string"
+        },
+        "orientation": {
+          "type": "string"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "licenses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "attribute_to": {
+                "type": "array",
+                "items": {}
+              },
+              "details": {
+                "type": "array",
+                "items": {}
+              },
+              "name": {
+                "type": "string"
+              },
+              "name_long": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "date_created_original": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "camera_exif": {
+          "type": "object",
+          "properties": {}
+        },
+        "transient_info": {
+          "type": "object",
+          "properties": {
+            "score_hotnessviews": {
+              "type": "string"
+            },
+            "likes": {
+              "type": "integer"
+            }
+          }
+        },
+        "date_captured": {
+          "type": "string"
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat_lon": {
+              "type": "null"
+            },
+            "place_name": {
+              "type": "array",
+              "items": {}
+            }
+          }
+        },
+        "mediachain_record": {
+          "type": "string"
+        },
+        "attribution": {
+          "type": "array",
+          "items": {}
+        },
+        "editorial_source_name": {
+          "type": "string"
+        },
+        "editorial_source": {
+          "type": "string"
+        },
+        "sightings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "date_source_version": {
+          "type": "string"
+        },
+        "sizes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "bytes": {
+                "type": "string"
+              },
+              "height": {
+                "type": "integer"
+              },
+              "uri_external": {
+                "type": "string"
+              },
+              "width": {
+                "type": "integer"
+              },
+              "content_type": {
+                "type": "string"
+              },
+              "dpi": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "artist_names": {
+          "type": "string"
+        },
+        "derived_qualities": {
+          "type": "object",
+          "properties": {
+            "medium": {
+              "type": "string"
+            },
+            "predicted_tags": {
+              "type": "string"
+            },
+            "has_people": {
+              "type": "string"
+            },
+            "colors": {
+              "type": "string"
+            },
+            "general_type": {
+              "type": "string"
+            },
+            "time_period": {
+              "type": "string"
+            }
+          }
+        },
+        "date_created_at_source": {
+          "type": "string"
+        },
+        "_id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

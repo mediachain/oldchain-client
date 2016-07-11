@@ -13,7 +13,7 @@ with open(reqs_file) as f:
 def _pre_build_py(dir):
     from subprocess import check_call
     check_call(['scripts/build_grpc.sh', sys.executable],
-            cwd=dir) 
+            cwd=dir)
 
 class build_py(_build_py):
     def run(self):

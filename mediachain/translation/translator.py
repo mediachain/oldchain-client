@@ -1,4 +1,5 @@
 import json
+import os
 from jsonschema import validate as validate_schema
 
 
@@ -39,6 +40,7 @@ class Translator(object):
         :param parsed_metadata: a dict containing un-translated metadata
         :return: a dict containing mediachain records.
 
+
         e.g:
         {"object": {"type": "artefact", "meta": {}},
          "related": {
@@ -54,8 +56,12 @@ class Translator(object):
 
     @classmethod
     def translate(cls, parsed_metadata):
+        """
+        Public wrapper for _translate. Don't override this
+        """
         res = cls._translate(parsed_metadata)
-        cls.validate(res['canonical']) and res
+        cls.validate(res['canonical']['meta'])
+        return res
 
     @staticmethod
     def can_translate_file(file_path):
@@ -69,5 +75,9 @@ class Translator(object):
         return False
 
     @staticmethod
-    def validate(json):
-        validate_schema(json, { "additionalProperties": False })
+    def validate(obj):
+        # TODO: move to initializer, set BASE_DIR somewhere sane
+        scehma_path = os.path.dirname(os.path.dirname(__file__)) + '/../schema.json'
+        with open(scehma_path) as schema_file:
+            schema = json.load(schema_file)
+        validate_schema(obj, schema)
