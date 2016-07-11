@@ -3,7 +3,7 @@ from base58 import b58encode
 from Queue import Queue
 from collections import deque
 from mediachain.transactor.block_cache import BlockCache
-from mediachain.proto import Transactor_pb2
+from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
 from mediachain.datastore.utils import ref_base58
 from grpc.beta.interfaces import StatusCode
 from grpc.framework.interfaces.face.face import AbortionError
@@ -38,11 +38,19 @@ class BlockchainFollower(object):
     def next(self):
         return next(self._event_iterator)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.cancel()
+        return False
+
     def start(self):
         self.catchup_thread.start()
         self.incoming_event_thread.start()
 
     def cancel(self):
+        # print('BlockchainFollower cancel')
         self._cancelled = True
         self.block_ref_queue.put('__abort__')
         self.journal_stream.cancel()

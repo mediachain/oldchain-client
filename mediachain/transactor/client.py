@@ -1,4 +1,5 @@
 import cbor
+from contextlib import contextmanager
 from grpc.beta import implementations
 
 from mediachain.datastore.data_objects import MultihashReference
@@ -9,6 +10,13 @@ import mediachain.reader.api as reader
 
 
 TIMEOUT_SECS = 120
+
+@contextmanager
+def canceling(rpc_stream):
+    try:
+        yield rpc_stream
+    finally:
+        rpc_stream.cancel()
 
 
 class TransactorClient(object):
@@ -57,7 +65,7 @@ class TransactorClient(object):
             follower.start()
             return follower
         else:
-            return stream
+            return canceling(stream)
 
     def canonical_stream(self, timeout=TIMEOUT_SECS):
         for event in self.journal_stream(timeout):
