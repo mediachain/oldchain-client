@@ -1,3 +1,4 @@
+import base58
 import json
 from pygments import highlight
 from pygments.lexers.data import JsonLexer
