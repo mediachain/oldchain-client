@@ -26,15 +26,14 @@ def get_iterator(data_dir, translator):
         return GettyDumpIterator(translator, dir_path)
     return DirectoryIterator(translator, dir_path)
 
-def raises_on_nonsense(translator):
-    with pytest.raises(ValidationError):
-        translator.validate({ 'some' : 'nonsense' })
 
-def test_raises_on_nonsense():
-    for translator_id in _TRANSLATOR_IDS:
-        translator = get_translator(translator_id)
-        with pytest.raises(ValidationError):
-            translator.validate({ 'some' : 'nonsense' })
+# def test_raises_on_nonsense():
+#     for translator_id in _TRANSLATOR_IDS:
+#         translator = get_translator(translator_id)
+#         with pytest.raises(ValidationError):
+#             translator.validate({
+#                 'some' : 'nonsense'
+#                 })
 
 
 @pytest.fixture(params=_TRANSLATOR_IDS)

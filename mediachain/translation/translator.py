@@ -1,6 +1,7 @@
 import json
 import os
 from jsonschema import validate as validate_schema
+from mediachain.translation.utils import is_mediachain_object, is_canonical, dump
 
 
 class Translator(object):
@@ -60,7 +61,8 @@ class Translator(object):
         Public wrapper for _translate. Don't override this
         """
         res = cls._translate(parsed_metadata)
-        cls.validate(res['canonical']['meta'])
+        validated = cls.validate(res)
+        print "Found {} valid Mediachain cells".format(validated)
         return res
 
     @staticmethod
@@ -76,8 +78,30 @@ class Translator(object):
 
     @staticmethod
     def validate(obj):
+        if type(obj) in (int, str, bool, unicode):
+            return 0
+
         # TODO: move to initializer, set BASE_DIR somewhere sane
         scehma_path = os.path.dirname(os.path.dirname(__file__)) + '/../schema.json'
         with open(scehma_path) as schema_file:
             schema = json.load(schema_file)
-        validate_schema(obj, schema)
+
+        validated = 0
+
+        # TODO: (or is_update...)
+        if is_mediachain_object(obj) and is_canonical(obj):
+            validate_schema(obj['meta'], schema)
+            print("VALIDATED!")
+            validated = 1
+
+        objects = {k: v for k, v in obj.iteritems()
+                    if isinstance(v, dict)}
+
+        lists = {k: v for k,v in obj.iteritems()
+                    if isinstance(v, list)}
+        objects_from_lists = [item for sublist in lists.values() for item in sublist]
+
+        for o in objects.values() + objects_from_lists:
+            validated = validated + Translator.validate(o)
+
+        return validated
