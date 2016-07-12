@@ -1,6 +1,7 @@
 import threading
+import time
 from base58 import b58encode
-from Queue import Queue
+from Queue import Queue, Empty as QueueEmpty
 from collections import deque
 from mediachain.transactor.block_cache import BlockCache
 from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
@@ -110,10 +111,13 @@ class BlockchainFollower(object):
             yield block_event
 
         while True:
-            e = self.incoming_event_queue.get()
-            if e == '__abort__':
-                return
-            yield e
+            try:
+                e = self.incoming_event_queue.get(block=False, timeout=1)
+                if e == '__abort__':
+                    return
+                yield e
+            except QueueEmpty:
+                time.sleep(0.2)
 
 
 def chain_ref(block):
