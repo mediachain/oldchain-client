@@ -76,22 +76,25 @@ class Translator(object):
 
         return False
 
-    @staticmethod
-    def validate(obj):
+    @classmethod
+    def get_schema(self):
+        # TODO: set BASE_DIR somewhere sane
+        schema_path = os.path.dirname(os.path.dirname(__file__)) + '/../schema.json'
+        if not hasattr(self, '_schema'):
+            with open(schema_path) as schema_file:
+                self._schema = json.load(schema_file)
+        return self._schema
+
+    @classmethod
+    def validate(self, obj):
         if type(obj) in (int, str, bool, unicode):
             return 0
-
-        # TODO: move to initializer, set BASE_DIR somewhere sane
-        scehma_path = os.path.dirname(os.path.dirname(__file__)) + '/../schema.json'
-        with open(scehma_path) as schema_file:
-            schema = json.load(schema_file)
 
         validated = 0
 
         # TODO: (or is_update...)
         if is_mediachain_object(obj) and is_canonical(obj):
-            validate_schema(obj['meta'], schema)
-            print("VALIDATED!")
+            validate_schema(obj['meta'], self.get_schema())
             validated = 1
 
         objects = {k: v for k, v in obj.iteritems()
@@ -102,6 +105,6 @@ class Translator(object):
         objects_from_lists = [item for sublist in lists.values() for item in sublist]
 
         for o in objects.values() + objects_from_lists:
-            validated = validated + Translator.validate(o)
+            validated = validated + self.validate(o)
 
         return validated
