@@ -49,6 +49,32 @@ class TransactorClient(object):
         return MultihashReference.from_base58(ref.reference)
 
     def journal_stream(self, catchup=True, timeout=None):
+        """
+        A stream of journal events from the mediachain transactor network.
+        If `catchup` is True (the default), will fetch the entire history
+        of the blockchain and play back all historical events, followed by
+        any incoming events.
+
+        If `catchup` is False, only future events will be delivered.
+
+        Defaults to an infinite stream with no timeout; you can force the
+        stream to expire by passing in a `timeout` in seconds.
+
+        IMPORTANT:
+        You must close the stream by calling the `.cancel()` method on the
+        returned `BlockchainFollower` object before exiting the process,
+        otherwise the gRPC connection will keep the process alive indefinitely.
+
+        To make cleanup automatic use with/as:
+            with client.journal_stream() as stream:
+              for event in stream:
+                # handle event...
+
+        
+        :param catchup:
+        :param timeout:
+        :return:
+        """
         req = Transactor_pb2.JournalStreamRequest()
         stream = self.client.JournalStream(req, timeout)
         follower = BlockchainFollower(stream, catchup)
