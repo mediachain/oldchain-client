@@ -3,7 +3,7 @@ import time
 from base58 import b58encode
 from Queue import Queue, Empty as QueueEmpty
 from collections import deque
-from mediachain.transactor.block_cache import BlockCache
+from mediachain.transactor.block_cache import get_block_cache
 from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
 from mediachain.datastore.utils import ref_base58
 from grpc.beta.interfaces import StatusCode
@@ -15,7 +15,7 @@ class BlockchainFollower(object):
                  catchup = True,
                  block_cache = None):
         if block_cache is None:
-            block_cache = BlockCache()
+            block_cache = get_block_cache()
 
         self.cache = block_cache
         self.journal_stream = journal_stream

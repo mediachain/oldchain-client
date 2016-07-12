@@ -51,8 +51,6 @@ class TransactorClient(object):
     def journal_stream(self, catchup=True, timeout=None):
         req = Transactor_pb2.JournalStreamRequest()
         stream = self.client.JournalStream(req, timeout)
-
-        # TODO: store block cache in a persistent location, reuse
         follower = BlockchainFollower(stream, catchup)
         follower.start()
         return follower

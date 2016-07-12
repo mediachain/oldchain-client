@@ -1,11 +1,21 @@
 from __future__ import unicode_literals
 import rocksdb
-import tempfile
-import shutil
+import os
 from mediachain.datastore import get_db
 from mediachain.datastore.utils import ref_base58, bytes_for_object, \
     object_for_bytes
 from mediachain.datastore.data_objects import MultihashReference
+from mediachain.utils.file import mkdir_p, system_cache_dir
+
+__SHARED_BLOCK_CACHE = None
+
+
+def get_block_cache():
+    global __SHARED_BLOCK_CACHE
+    if __SHARED_BLOCK_CACHE is None:
+        __SHARED_BLOCK_CACHE = BlockCache()
+    return __SHARED_BLOCK_CACHE
+
 
 class BlockCache(object):
     """
@@ -16,18 +26,15 @@ class BlockCache(object):
         if datastore is None:
             datastore = get_db()
         if cache_path is None:
-            cache_path = tempfile.mktemp('-mchain-cache.rocksdb')
-            self._delete_cache_on_cleanup = True
+            cache_dir = system_cache_dir('io.mediachain')
+            mkdir_p(cache_dir)
+            cache_path = os.path.join(cache_dir, 'block-cache.db')
 
         self.datastore = datastore
         self.cache_path = cache_path
         opts = rocksdb.Options(create_if_missing=True)
         self.cache_db = rocksdb.DB(cache_path, opts)
 
-    def __del__(self):
-        self.cache_db = None
-        if getattr(self, '_delete_cache_on_cleanup'):
-            shutil.rmtree(self.cache_path)
 
     def put(self, block, ref=None):
         block_bytes = bytes_for_object(block)
