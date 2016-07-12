@@ -70,7 +70,7 @@ class TransactorClient(object):
               for event in stream:
                 # handle event...
 
-        
+
         :param catchup:
         :param timeout:
         :return:
@@ -82,7 +82,7 @@ class TransactorClient(object):
         return follower
 
 
-    def canonical_stream(self, timeout=None):
+    def canonical_stream(self, timeout=600):
         for event in self.journal_stream(timeout=timeout):
             if event.WhichOneof("event") == "updateChainEvent":
                 ref = event.updateChainEvent.canonical.reference
