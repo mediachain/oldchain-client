@@ -12,6 +12,7 @@ from grpc.framework.interfaces.face.face import AbortionError
 class BlockchainFollower(object):
     def __init__(self,
                  journal_stream,
+                 catchup = True,
                  block_cache = None):
         if block_cache is None:
             block_cache = BlockCache()
@@ -21,6 +22,7 @@ class BlockchainFollower(object):
         self.block_ref_queue = Queue()
         self.incoming_event_queue = Queue()
         self.caught_up = False
+        self.should_catchup = catchup
         self.first_incoming_event_received = False
         self.catchup_thread = threading.Thread(
             name='blockchain-catchup',
@@ -58,6 +60,9 @@ class BlockchainFollower(object):
         self.journal_stream.cancel()
 
     def _perform_catchup(self):
+        if not self.should_catchup:
+            return
+
         while True:
             ref = self.block_ref_queue.get()
             if ref == '__abort__':

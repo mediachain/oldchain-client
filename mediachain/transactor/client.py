@@ -5,7 +5,6 @@ from mediachain.datastore.data_objects import MultihashReference
 from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
 from mediachain.proto import Types_pb2  # pylint: disable=no-name-in-module
 from mediachain.transactor.blockchain_follower import BlockchainFollower
-from mediachain.transactor.stream_consumer import JournalStreamConsumer
 import mediachain.reader.api as reader
 
 
@@ -52,12 +51,12 @@ class TransactorClient(object):
     def journal_stream(self, catchup=True, timeout=None):
         req = Transactor_pb2.JournalStreamRequest()
         stream = self.client.JournalStream(req, timeout)
-        if catchup:
-            # TODO: store block cache in a persistent location, reuse
-            follower = BlockchainFollower(stream)
-            return JournalStreamConsumer(follower)
-        else:
-            return JournalStreamConsumer(stream)
+
+        # TODO: store block cache in a persistent location, reuse
+        follower = BlockchainFollower(stream, catchup)
+        follower.start()
+        return follower
+
 
     def canonical_stream(self, timeout=None):
         for event in self.journal_stream(timeout=timeout):
