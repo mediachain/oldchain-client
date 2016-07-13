@@ -118,6 +118,7 @@ records being written to the datastore:
       }
     }
   ]
+ }
 }
 ```
 
