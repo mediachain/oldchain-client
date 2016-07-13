@@ -1,6 +1,10 @@
 import cbor
+import binascii
 from multihash import SHA2_256, encode as multihash_encode
 from base58 import b58encode, b58decode
+
+IPLD_LINK_TAG = 258
+MULTIADDR_HEADER = binascii.unhexlify(b'A50322')
 
 
 class MultihashReference(object):
@@ -28,8 +32,12 @@ class MultihashReference(object):
     def to_map(self):
         return {u'@link': self.multihash}
 
+    def to_ipld(self):
+        return cbor.Tag(tag=IPLD_LINK_TAG,
+                        value=bytes(MULTIADDR_HEADER + self.multihash))
+
     def to_cbor_bytes(self):
-        return cbor.dumps(self.to_map(), sort_keys=True)
+        return cbor.dumps(self.to_ipld(), sort_keys=True)
 
     def multihash_base58(self):
         return b58encode(self.multihash)

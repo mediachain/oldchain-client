@@ -1,17 +1,28 @@
 import base58
 import cbor
 from mediachain.proto import Types_pb2  # pylint: disable=no-name-in-module
-from mediachain.datastore.data_objects import MultihashReference
+from mediachain.datastore.data_objects import MultihashReference, \
+    IPLD_LINK_TAG, MULTIADDR_HEADER
 
 
 def multihash_ref(ref):
     if isinstance(ref, MultihashReference):
         return ref
 
+    if isinstance(ref, cbor.Tag) and ref.tag == IPLD_LINK_TAG:
+        ref = ref.value
+
+    try:
+        if ref.startswith(MULTIADDR_HEADER):
+            ref = ref[len(MULTIADDR_HEADER):]
+    except (AttributeError, TypeError):
+        pass
+
     try:
         ref = ref.reference
     except AttributeError:
         pass
+
     try:
         ref = ref['@link']
     except (TypeError, KeyError):

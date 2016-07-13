@@ -50,7 +50,7 @@ class Writer(object):
 
         common_meta = {'translator': translator_id}
         canonical_meta = common_meta.copy()
-        canonical_meta.update({'raw_ref': raw_ref.to_map()})
+        canonical_meta.update({'raw_ref': raw_ref.to_ipld()})
 
         canonical = translated['canonical']
         canonical = self.flatten_record(canonical, canonical_meta,
@@ -61,7 +61,7 @@ class Writer(object):
         chain_refs = []
         for cell in chain:
             cell = self.flatten_record(cell, common_meta, local_assets)
-            cell['ref'] = canonical_ref.to_map()
+            cell['ref'] = canonical_ref.to_ipld()
             chain_ref = self.submit_object(cell)
             chain_refs += chain_ref.multihash_base58()
         return {
@@ -82,7 +82,7 @@ class Writer(object):
                 # print('Unable to store asset with key {}, removing'.format(k))
                 del record[k]
             else:
-                record[k] = ref.to_map()
+                record[k] = ref.to_ipld()
 
         objects = {k: v for k, v in record.iteritems()
                    if isinstance(v, dict)}
@@ -92,14 +92,14 @@ class Writer(object):
                                        meta_source, local_assets)
             if is_mediachain_object(o):
                 ref = self.submit_object(flat)
-                record[k] = ref.to_map()
+                record[k] = ref.to_ipld()
             else:
                 record[k] = flat
 
         if is_mediachain_object(record):
             del record['__mediachain_object__']
             try:
-                record['metaSource'] = meta_source.to_map()
+                record['metaSource'] = meta_source.to_ipld()
             except (TypeError, AttributeError):
                 pass
             record['meta'].update(common_meta)
