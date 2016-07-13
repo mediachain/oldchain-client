@@ -4,8 +4,7 @@ from mediachain.translation.lookup import get_translator, _TRANSLATORS
 from mediachain.translation.utils import is_mediachain_object, is_canonical, \
     MEDIACHAIN_OBJECT_TAG
 
-from mediachain.ingestion.directory_iterator import LocalFileIterator
-from mediachain.ingestion.getty_dump_iterator import GettyDumpIterator
+from mediachain.ingestion.directory_iterator import DirectoryIterator
 
 from jsonschema import ValidationError
 
@@ -22,9 +21,7 @@ def test_translator_lookup():
 def get_iterator(data_dir, translator):
     translator_id = translator.translator_id()
     dir_path = os.path.join(data_dir, translator_id)
-    if translator_id.startswith('Getty'):
-        return GettyDumpIterator(translator, dir_path)
-    return LocalFileIterator(translator, dir_path)
+    return DirectoryIterator(translator, dir_path)
 
 
 # def test_raises_on_nonsense():
