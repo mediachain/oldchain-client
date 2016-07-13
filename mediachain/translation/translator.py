@@ -1,7 +1,7 @@
 import json
 import os
 from jsonschema import validate as validate_schema
-from mediachain.translation.utils import is_mediachain_object, is_canonical, dump
+from mediachain.translation.utils import is_mediachain_object, is_canonical
 
 
 class Translator(object):
@@ -108,3 +108,4 @@ class Translator(object):
             validated = validated + self.validate(o)
 
         return validated
+

@@ -4,7 +4,7 @@ import copy
 import base58
 import json
 from pygments import highlight
-from mediachain.translation.utils import dump
+from utils import dump
 
 def get_and_print_object(transactor, object_id):
     obj = get_object(transactor, object_id, fetch_images=False)
