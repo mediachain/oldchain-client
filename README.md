@@ -103,13 +103,7 @@ The interface between the translation modules and the writer is documented in
 [docs/translation.md](docs/translation.md).
 
 
-## Known issues
 
-Trying to stop the import with CTRL-C will often fail to kill the process.  This
-is an [issue](https://github.com/grpc/grpc/issues/4705) with grpc which should
- be resolved in the next release.
- 
- 
 ## Unknown issues
 
 This project is under active development, and likely contains bugs and other 
