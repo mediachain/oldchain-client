@@ -1,4 +1,3 @@
-
 MEDIACHAIN_OBJECT_TAG = '__mediachain_object__'
 MEDIACHAIN_ASSET_TAG = '__mediachain_asset__'
 
@@ -19,3 +18,4 @@ def is_mediachain_object(value):
 
 def is_canonical(obj):
     return obj['type'] == 'artefact' or obj['type'] == 'entity'
+
