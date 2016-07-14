@@ -81,7 +81,8 @@ class Translator(object):
     @classmethod
     def get_schema(self):
         # TODO: set BASE_DIR somewhere sane
-        schema_path = os.path.abspath(os.path.dirname(__file__) + '/../schema.json')
+        schema_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), 'schema.json'))
         if not hasattr(self, '_schema'):
             with open(schema_path) as schema_file:
                 self._schema = json.load(schema_file)
