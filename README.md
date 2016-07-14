@@ -3,7 +3,24 @@
 A client library and minimal command line interface for reading data from and 
 importing data into the current Mediachain prototype.
 
-## Installation
+## Usage
+
+#### Optional dependencies
+The mediachain client uses [rocksdb](http://rocksdb.org/) to store a local
+cache of the transactor blockchain.  This cache is not needed for most simple
+operations, and is therefore optional.  To enable the cache, you'll need to
+install rockdb, and the [pyrocksdb python module](https://github.com/stephan-hof/pyrocksdb)
+
+On macOS, via [homebrew](http://brew.sh/):
+```bash
+$ brew install rocksdb
+$ pip install pyrocksdb
+```
+
+Linux users should follow the [rocksdb installation instructions](https://github.com/facebook/rocksdb/blob/master/INSTALL.md)
+and install from source.
+
+#### Installation
 
 To install, first make sure you're using an up-to-date
 version of `pip`.  You can update `pip` with itself: `pip install -U pip`.
@@ -26,7 +43,6 @@ Please note that if you're installing into a virtualenv, it should be activated
 before running the above `pip` commands.  If you're installing into a system-wide
 python installation, you may need to run with `sudo` if you get permission errors.
 
-## Command Line Usage
 
 ### Configuration
 
