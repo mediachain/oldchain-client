@@ -1,9 +1,9 @@
 from os import path
-from directory_iterator import DirectoryIterator
+from directory_iterator import LocalFileIterator
 import pathlib
 
 
-class GettyDumpIterator(DirectoryIterator):
+class GettyDumpIterator(LocalFileIterator):
     @staticmethod
     def get_local_assets(metadata_filepath, parsed_metadata):
         return {
