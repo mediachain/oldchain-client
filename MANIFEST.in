@@ -1,3 +1,4 @@
 include requirements.txt
 include scripts/*
 include protobuf/*
+recursive-include mediachain/translation *.json

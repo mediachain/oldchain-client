@@ -27,6 +27,9 @@ setup(
     description='mediachain reader command line interface',
     author='Mediachain Labs',
     packages=find_packages('.'),
+    package_data={
+        '': ['*.json']
+    },
     author_email = 'hello@mediachainlabs.com',
     entry_points={
         'console_scripts': [
