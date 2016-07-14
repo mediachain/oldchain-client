@@ -4,7 +4,9 @@ from mediachain.rpc.utils import with_retry
 from mediachain.datastore.data_objects import MultihashReference
 from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
 from mediachain.proto import Types_pb2  # pylint: disable=no-name-in-module
+from mediachain.transactor.blockchain_follower import BlockchainFollower
 import mediachain.reader.api as reader
+
 
 TIMEOUT_SECS = 120
 
@@ -46,13 +48,44 @@ class TransactorClient(object):
         ref = with_retry(self.client.UpdateChain, req, timeout)
         return MultihashReference.from_base58(ref.reference)
 
-    def journal_stream(self, timeout=TIMEOUT_SECS):
-        req = Transactor_pb2.JournalStreamRequest()
-        return with_retry(self.client.JournalStream, req, timeout)
+    def journal_stream(self, catchup=True, timeout=None):
+        """
+        A stream of journal events from the mediachain transactor network.
+        If `catchup` is True (the default), will fetch the entire history
+        of the blockchain and play back all historical events, followed by
+        any incoming events.
 
-    def canonical_stream(self, timeout=TIMEOUT_SECS):
-        for event in self.journal_stream(timeout):
+        If `catchup` is False, only future events will be delivered.
+
+        Defaults to an infinite stream with no timeout; you can force the
+        stream to expire by passing in a `timeout` in seconds.
+
+        IMPORTANT:
+        You must close the stream by calling the `.cancel()` method on the
+        returned `BlockchainFollower` object before exiting the process,
+        otherwise the gRPC connection will keep the process alive indefinitely.
+
+        To make cleanup automatic use with/as:
+            with client.journal_stream() as stream:
+              for event in stream:
+                # handle event...
+
+
+        :param catchup:
+        :param timeout:
+        :return:
+        """
+        req = Transactor_pb2.JournalStreamRequest()
+        stream = self.client.JournalStream(req, timeout)
+        follower = BlockchainFollower(stream, catchup)
+        follower.start()
+        return follower
+
+
+    def canonical_stream(self, timeout=600):
+        for event in self.journal_stream(timeout=timeout):
             if event.WhichOneof("event") == "updateChainEvent":
                 ref = event.updateChainEvent.canonical.reference
                 obj = reader.get_object(self, ref)
                 yield obj
+

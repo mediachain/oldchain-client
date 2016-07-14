@@ -1,18 +1,24 @@
 language: python
+sudo: required
+dist: trusty
 before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get -qq update
-  - sudo apt-get install gcc-4.8 -y --force-yes
+  - sudo apt-get install gcc-4.8 g++-4.8 -y --force-yes
+  - sudo apt-get install -y libsnappy-dev zlib1g-dev libbz2-dev libgflags-dev
   - ls /usr/lib/gcc/x86_64-linux-gnu/4.8/include/
 install:
   - pip install --upgrade pip
+  - ./scripts/install_pyrocksdb.sh $HOME/src-dependencies 4.8 0.4
   - pip install -r requirements.txt
-  - pip install pylint>1.6.1
+  - pip install 'pylint>=1.6.1'
 script:
-  - pylint --errors-only --disable=print-statement,catching-non-exception mediachain && python setup.py test
+  - pylint --errors-only --disable=print-statement,catching-non-exception --ignored-classes=rocksdb mediachain && python setup.py test
 notifications:
   slack: mediachain:gzFe4w4HwIlNnxaHy1vAKW3q
   on_success: change
   on_failure: change
 cache:
-  - pip
+  pip: true
+  directories:
+    - $HOME/src-dependencies

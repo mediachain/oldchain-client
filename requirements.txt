@@ -16,3 +16,4 @@ requests==2.10.0
 ipfs-api==0.2.3
 pathlib==1.0.1
 grpcio-tools==0.15.1
+pyrocksdb==0.4
