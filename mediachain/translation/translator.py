@@ -61,8 +61,10 @@ class Translator(object):
         Public wrapper for _translate. Don't override this
         """
         res = cls._translate(parsed_metadata)
-        validated = cls.validate(res)
-        print "Found {} valid Mediachain cells".format(validated)
+        if not os.environ.get('MEDIACHAIN_SKIP_SCHEMA_VALIDATION', False):
+            validated = cls.validate(res)
+            print "Found {} valid Mediachain cells".format(validated)
+
         return res
 
     @staticmethod
@@ -79,7 +81,7 @@ class Translator(object):
     @classmethod
     def get_schema(self):
         # TODO: set BASE_DIR somewhere sane
-        schema_path = os.path.dirname(os.path.dirname(__file__)) + '/../schema.json'
+        schema_path = os.path.abspath(os.path.dirname(__file__) + '/../schema.json')
         if not hasattr(self, '_schema'):
             with open(schema_path) as schema_file:
                 self._schema = json.load(schema_file)
