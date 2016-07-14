@@ -10,7 +10,7 @@ class GettyTranslator(Translator):
         return 'GettyTranslator/0.1'
 
     @staticmethod
-    def translate(parsed_metadata):
+    def _translate(parsed_metadata):
         getty_json = parsed_metadata
 
         # extract artist Entity

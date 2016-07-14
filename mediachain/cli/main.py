@@ -112,6 +112,10 @@ def main(arguments=None):
     ingest_parser.add_argument('dir',
                                type=str,
                                help='Path to getty json directory root')
+    ingest_parser.add_argument('--skip-validation',
+                               dest='skip_validation',
+                               action='store_true',
+                               help=argparse.SUPPRESS)  # hide from --help
     ingest_parser.add_argument('-m', '--max-entries',
                                type=int,
                                dest='max_num',
@@ -154,6 +158,9 @@ def main(arguments=None):
     }
 
     ns = parser.parse_args(arguments)
+    if getattr(ns, 'skip_validation', False):
+        os.environ['MEDIACHAIN_SKIP_SCHEMA_VALIDATION'] = 'true'
+
     fn = SUBCOMMANDS[ns.subcommand]
 
     configure_datastore(ns)

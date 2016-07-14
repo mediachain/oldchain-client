@@ -1,4 +1,7 @@
 import json
+import os
+from jsonschema import validate as validate_schema
+from mediachain.translation.utils import is_mediachain_object, is_canonical
 
 
 class Translator(object):
@@ -31,12 +34,13 @@ class Translator(object):
             )
 
     @staticmethod
-    def translate(parsed_metadata):
+    def _translate(parsed_metadata):
         """
         Transforms the parsed metadata into a format suitable for writing to
         the mediachain network.
         :param parsed_metadata: a dict containing un-translated metadata
         :return: a dict containing mediachain records.
+
 
         e.g:
         {"object": {"type": "artefact", "meta": {}},
@@ -51,6 +55,18 @@ class Translator(object):
             "subclasses should return dictionary of translated metadata"
         )
 
+    @classmethod
+    def translate(cls, parsed_metadata):
+        """
+        Public wrapper for _translate. Don't override this
+        """
+        res = cls._translate(parsed_metadata)
+        if not os.environ.get('MEDIACHAIN_SKIP_SCHEMA_VALIDATION', False):
+            validated = cls.validate(res)
+            print "Found {} valid Mediachain cells".format(validated)
+
+        return res
+
     @staticmethod
     def can_translate_file(file_path):
         """
@@ -61,3 +77,37 @@ class Translator(object):
         """
 
         return False
+
+    @classmethod
+    def get_schema(self):
+        # TODO: set BASE_DIR somewhere sane
+        schema_path = os.path.abspath(os.path.dirname(__file__) + '/../schema.json')
+        if not hasattr(self, '_schema'):
+            with open(schema_path) as schema_file:
+                self._schema = json.load(schema_file)
+        return self._schema
+
+    @classmethod
+    def validate(self, obj):
+        if type(obj) in (int, str, bool, unicode):
+            return 0
+
+        validated = 0
+
+        # TODO: (or is_update...)
+        if is_mediachain_object(obj) and is_canonical(obj):
+            validate_schema(obj['meta'], self.get_schema())
+            validated = 1
+
+        objects = {k: v for k, v in obj.iteritems()
+                    if isinstance(v, dict)}
+
+        lists = {k: v for k,v in obj.iteritems()
+                    if isinstance(v, list)}
+        objects_from_lists = [item for sublist in lists.values() for item in sublist]
+
+        for o in objects.values() + objects_from_lists:
+            validated = validated + self.validate(o)
+
+        return validated
+
