@@ -39,8 +39,8 @@ def main(arguments=None):
 
             set_ipfs_config(cfg)
 
-            if getattr(ns, 'use_ipfs'):
-                set_use_ipfs_for_raw_data(True)
+            if getattr(ns, 'disable_ipfs'):
+                set_use_ipfs_for_raw_data(False)
         except AttributeError:
             pass
 
@@ -72,11 +72,11 @@ def main(arguments=None):
                         default=10002,
                         help='Port to use when connecting to the datastore ' +
                              'service.')
-    parser.add_argument('-i', '--use-ipfs',
-                        dest='use_ipfs',
+    parser.add_argument('--disable-ipfs',
+                        dest='disable_ipfs',
                         action='store_true',
-                        help='If set, upload images and raw metadata ' +
-                             'to IPFS'
+                        help=('If set, do not upload images and raw metadata '
+                              'to IPFS')
                         )
     parser.add_argument('--ipfs-host',
                         dest='ipfs_host',

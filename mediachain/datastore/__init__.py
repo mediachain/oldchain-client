@@ -1,7 +1,7 @@
 from ipfs import IpfsDatastore
 from rpc import get_db
 
-__USE_IPFS_FOR_RAW_DATA = False
+__USE_IPFS_FOR_RAW_DATA = True
 
 
 def set_use_ipfs_for_raw_data(use):
