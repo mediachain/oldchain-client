@@ -1,6 +1,6 @@
 import ipfsApi
+from requests.exceptions import ConnectionError
 from tempfile import NamedTemporaryFile
-from mediachain.datastore.data_objects import MultihashReference
 from mediachain.datastore.utils import multihash_ref, object_for_bytes
 
 __IPFS_CONFIG = {'host': 'localhost', 'port': 5001}
@@ -22,8 +22,16 @@ def get_ipfs_datastore():
 
 
 class IpfsDatastore(object):
-    def __init__(self, host='127.0.0.1', port=5001):
+    def __init__(self, host='localhost', port=5001):
         self.client = ipfsApi.Client(host, port)
+        try:
+            self.client.id()
+        except ConnectionError:
+            raise Exception(
+                'Unable to connect to ipfs API at {}:{} \n'
+                'For ipfs installation instructions see '
+                'https://ipfs.io/docs/install'.format(host, port)
+            )
 
     def put(self, data_object):
         try:
