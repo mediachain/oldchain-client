@@ -1,7 +1,8 @@
 import ipfsApi
 from requests.exceptions import ConnectionError
 from tempfile import NamedTemporaryFile
-from mediachain.datastore.utils import multihash_ref, object_for_bytes
+from mediachain.datastore.utils import multihash_ref, object_for_bytes, \
+    bytes_for_object
 
 __IPFS_CONFIG = {'host': 'localhost', 'port': 5001}
 
@@ -21,6 +22,9 @@ def get_ipfs_datastore():
     return IpfsDatastore(**__IPFS_CONFIG)
 
 
+TIMEOUT_SECS = 120
+
+
 class IpfsDatastore(object):
     def __init__(self, host='localhost', port=5001):
         self.client = ipfsApi.Client(host, port)
@@ -33,16 +37,13 @@ class IpfsDatastore(object):
                 'https://ipfs.io/docs/install'.format(host, port)
             )
 
-    def put(self, data_object):
-        try:
-            content = data_object.to_cbor_bytes()
-        except AttributeError:
-            content = data_object
+    def put(self, data_object, timeout=TIMEOUT_SECS):
+        content = bytes_for_object(data_object)
 
         with NamedTemporaryFile() as f:
             f.write(content)
             f.flush()
-            result = self.client.add(f.name)
+            result = self.client.add(f.name, timeout=timeout)
 
         if isinstance(result, basestring):
             return result
@@ -61,8 +62,18 @@ class IpfsDatastore(object):
         hashes = [h['Hash'] for h in result if h['Name'] == name]
         return multihash_ref(hashes[0])
 
-    def get(self, ref):
-        stream = self.client.cat(str(ref), stream=True)
+    def get(self, ref, timeout=TIMEOUT_SECS):
+        stream = self.open(ref, timeout=timeout)
         byte_string = stream.read()
         return object_for_bytes(byte_string)
 
+    def open(self, ref, timeout=TIMEOUT_SECS):
+        """
+        Return a file-like object with the binary representation of the
+        object identified by the given ref
+        :param ref: A multihash reference to a binary object in the datastore
+        :param timeout: Seconds to wait for ipfs to return the object
+        :return: A file-like object with the data returned
+        """
+        stream = self.client.cat(str(ref), stream=True, timeout=timeout)
+        return stream
