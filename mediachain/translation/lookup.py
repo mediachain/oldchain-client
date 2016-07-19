@@ -1,6 +1,7 @@
 from mediachain.datastore.ipfs import get_ipfs_datastore
 import sys
 import os
+from os.path import expanduser, join
 
 class ChDir(object):
     """
@@ -26,7 +27,7 @@ def get_translator(translator_id):
 
 	ipfs = get_ipfs_datastore() # FIXME: memoize this
 
-	path = '~/.mediachain'
+	path = join(expanduser('~'), '.mediachain')
 	if not os.path.exists(path):
 	    os.makedirs(path)
 
