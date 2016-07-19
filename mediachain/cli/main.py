@@ -136,15 +136,7 @@ def main(arguments=None):
 
     def ingest_cmd(args):
         translator = get_translator(args.translator_id)
-
-        # FIXME: we should have a way to map translator id + ingest args to
-        #  a dataset iterator
-        if args.translator_id.startswith('Getty'):
-            iterator = GettyDumpIterator(translator, args.dir, args.max_num)
-        else:
-            raise RuntimeError(
-                "Dataset with id {} is not supported".format(args.translator_id)
-            )
+        iterator = LocalFileIterator(translator, args.dir, args.max_num)
 
         transactor = TransactorClient(args.host, args.port)
         writer = Writer(transactor, download_remote_assets=args.download_thumbs)
