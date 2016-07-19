@@ -10,7 +10,7 @@ class LocalFileIterator(DatasetIterator):
         
         self.root_path = root_path
 
-    def __iter__(self):
+    def generator(self):
         nn = 0
         limit = self.limit
 
