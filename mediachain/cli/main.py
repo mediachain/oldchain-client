@@ -19,7 +19,7 @@ from mediachain.datastore.ipfs import set_ipfs_config
 from mediachain.datastore.rpc import set_rpc_datastore_config, close_db
 from mediachain.writer import Writer
 from mediachain.translation import get_translator
-from mediachain.ingestion.getty_dump_iterator import GettyDumpIterator
+from mediachain.ingestion.directory_iterator import DirectoryIterator
 from mediachain.transactor.client import TransactorClient
 
 
