@@ -1,5 +1,6 @@
 from mediachain.datastore.ipfs import get_ipfs_datastore
 import sys
+import os
 
 class ChDir(object):
     """
