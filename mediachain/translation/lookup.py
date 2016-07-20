@@ -38,7 +38,7 @@ def get_translator(translator_id):
 		translator = ipfs.client.get(version) # FIXME: timeout, error handling
 		os.rename(version, name) # ipfsApi doesn't support -o
 
-	sys.path.append(path)
+	sys.path.insert(1, path)
 
 	full_name = 'mediachain.translation.' + name + '.translator'
 	translator_module = __import__(full_name, globals(), locals(), [name])
