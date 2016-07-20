@@ -34,7 +34,7 @@ def get_translator(translator_id):
 	    os.makedirs(path)
 
 	with ChDir(path):
-		shutil.rmtree(name)
+		shutil.rmtree(name, ignore_errors=True)
 		translator = ipfs.client.get(version) # FIXME: timeout, error handling
 		os.rename(version, name) # ipfsApi doesn't support -o
 
