@@ -2,7 +2,7 @@ from mediachain.datastore.ipfs import get_ipfs_datastore
 import sys
 import os
 import shutil
-from os.path import expanduser, join
+from os.path import expanduser, dirname, join
 
 class ChDir(object):
     """
@@ -28,8 +28,15 @@ def get_translator(translator_id):
 
 	ipfs = get_ipfs_datastore() # FIXME: memoize this
 
-	basepath = join(expanduser('~'), '.mediachain')
-	path = join(basepath, 'mediachain', 'translation')
+	base_path = join(expanduser('~'), '.mediachain')
+	path = join(base_path, '_mediachain', 'translation')
+	if not os.path.exists(path):
+	    os.makedirs(path)
+	    print join(path, '__init__.py')
+	    open(join(path, '__init__.py'), 'a').close()
+	    print join(dirname(path), '__init__.py')
+	    open(join(dirname(path), '__init__.py'), 'a').close()
+
 	if not os.path.exists(path):
 	    os.makedirs(path)
 
@@ -38,9 +45,9 @@ def get_translator(translator_id):
 		translator = ipfs.client.get(version) # FIXME: timeout, error handling
 		os.rename(version, name) # ipfsApi doesn't support -o
 
-	sys.path.insert(1, path)
+	sys.path.insert(1, base_path)
 
-	full_name = 'mediachain.translation.' + name + '.translator'
+	full_name = '_mediachain.translation.' + name + '.translator'
 	translator_module = __import__(full_name, globals(), locals(), [name])
 	translator = getattr(translator_module, name.capitalize())
 
