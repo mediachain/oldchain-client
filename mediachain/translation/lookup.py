@@ -3,7 +3,6 @@ import sys
 import os
 from os.path import expanduser, join
 
-
 class ChDir(object):
     """
     Step into a directory temporarily
@@ -18,36 +17,28 @@ class ChDir(object):
     def __exit__(self, *args):
         os.chdir(self.old_dir)
 
-
 def get_translator(translator_id):
-    try:
-        name, version = translator_id.split('@')
-    except ValueError:
-        raise LookupError(
-            "Bad translator id `{}`, must be `name@multihash` format".format(translator_id)
-        )
+	try:
+		name, version = translator_id.split('@')
+	except ValueError:
+		raise LookupError(
+			"Bad translator id `{}`, must be `name@multihash` format".format(translator_id)
+		)
 
-    path = join(expanduser('~'), '.mediachain')
-    if not os.path.exists(path):
-        os.makedirs(path)
+	ipfs = get_ipfs_datastore() # FIXME: memoize this
 
-    try:
-        return load_translator(path, name, version)
-    except ImportError:
-        pass
+	path = join(expanduser('~'), '.mediachain')
+	if not os.path.exists(path):
+	    os.makedirs(path)
 
-    ipfs = get_ipfs_datastore() # FIXME: memoize this
-    with ChDir(path):
-        translator = ipfs.client.get(version) # FIXME: timeout, error handling
+	with ChDir(path):
+		translator = ipfs.client.get(version) # FIXME: timeout, error handling
 
-    return load_translator(path, name, version)
+	sys.path.append(path)
+	# print('dynamic module load path: {}'.format(path))
+	full_path = version + '.translator'
+	# print('loading translator module from {}'.format(full_path))
+	translator_module = __import__(full_path, globals(), locals(), [name])
+	translator = getattr(translator_module, name.capitalize())
 
-
-def load_translator(base_path, name, version):
-    if base_path not in sys.path:
-        sys.path.append(base_path)
-
-    module_path = version + '.translator'
-    translator_module = __import__(module_path, globals(), locals(), [name])
-    translator = getattr(translator_module, name.capitalize())
-    return translator
+	return translator
