@@ -35,8 +35,9 @@ def get_translator(translator_id):
 		translator = ipfs.client.get(version) # FIXME: timeout, error handling
 
 	sys.path.append(path)
-
-	full_path = 'mediachain.translation.' + name + '.translator'
+	# print('dynamic module load path: {}'.format(path))
+	full_path = version + '.translator'
+	# print('loading translator module from {}'.format(full_path))
 	translator_module = __import__(full_path, globals(), locals(), [name])
 	translator = getattr(translator_module, name.capitalize())
 
