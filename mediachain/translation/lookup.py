@@ -1,6 +1,7 @@
 from mediachain.datastore.ipfs import get_ipfs_datastore
 import sys
 import os
+import shutil
 from os.path import expanduser, join
 
 class ChDir(object):
@@ -27,18 +28,20 @@ def get_translator(translator_id):
 
 	ipfs = get_ipfs_datastore() # FIXME: memoize this
 
-	path = join(expanduser('~'), '.mediachain')
+	basepath = join(expanduser('~'), '.mediachain')
+	path = join(basepath, 'mediachain', 'translation')
 	if not os.path.exists(path):
 	    os.makedirs(path)
 
 	with ChDir(path):
+		shutil.rmtree(name)
 		translator = ipfs.client.get(version) # FIXME: timeout, error handling
+		os.rename(version, name) # ipfsApi doesn't support -o
 
 	sys.path.append(path)
-	# print('dynamic module load path: {}'.format(path))
-	full_path = version + '.translator'
-	# print('loading translator module from {}'.format(full_path))
-	translator_module = __import__(full_path, globals(), locals(), [name])
+
+	full_name = 'mediachain.translation.' + name + '.translator'
+	translator_module = __import__(full_name, globals(), locals(), [name])
 	translator = getattr(translator_module, name.capitalize())
 
 	return translator
