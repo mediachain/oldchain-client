@@ -32,9 +32,9 @@ def get_translator(translator_id):
 	path = join(base_path, '_mediachain', 'translation')
 	if not os.path.exists(path):
 	    os.makedirs(path)
-	    print join(path, '__init__.py')
+	    # print join(path, '__init__.py')
 	    open(join(path, '__init__.py'), 'a').close()
-	    print join(dirname(path), '__init__.py')
+	    # print join(dirname(path), '__init__.py')
 	    open(join(dirname(path), '__init__.py'), 'a').close()
 
 	if not os.path.exists(path):
