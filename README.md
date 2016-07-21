@@ -47,8 +47,10 @@ python installation, you may need to run with `sudo` if you get permission error
 ### Configuration
 
 The client communicates with two external services: the mediachain transactor 
-network, and the distributed datastore.  The minimum configuration is to set 
-the hostname or IP address of the transactor RPC gateway using the `-s` or 
+network, and the distributed datastore.  By default, the client will connect
+to the mediachain testnet.
+
+To connect to another mediachain host, use the `-s` or
 `--host` command line flag.  If the transactor RPC service is using a port
 other than the default of `10001`, you'll need to set that with `-p` or 
 `--port`.
@@ -86,8 +88,8 @@ with all statements in its chain of updates applied.
 The command line tool supports ingesting datasets for which a "translator"
 exists.  The translator consumes data in its raw format and outputs a
 description of the mediachain records and raw media assets to store in
-the mediachain network.  The translator output format is 
-[detailed below](#translator-format).  To use an existing translator, invoke
+the mediachain network.  The translator output format is available at
+[docs/translation.md](docs/translation.md).  To use an existing translator, invoke
 the command line `ingest` command, passing the id of a translator and the
 location of the raw metadata.
 
@@ -113,15 +115,11 @@ mediachain [config-options] ingest GettyTranslator/0.1 ~/datasets/getty
 
 ## Internals
 
-TBD
+The interface between the translation modules and the writer is documented in
+[docs/translation.md](docs/translation.md).
 
-## Known issues
 
-Trying to stop the import with CTRL-C will often fail to kill the process.  This
-is an [issue](https://github.com/grpc/grpc/issues/4705) with grpc which should
- be resolved in the next release.
- 
- 
+
 ## Unknown issues
 
 This project is under active development, and likely contains bugs and other 
