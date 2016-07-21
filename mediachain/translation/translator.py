@@ -5,12 +5,25 @@ from mediachain.translation.utils import is_mediachain_object, is_canonical
 
 
 class Translator(object):
+    __version__ = None
+
+    @classmethod
+    def set_version(cls, version):
+        cls.__version__ = version
+
     @staticmethod
     def translator_id():
         """
         :return: A unique string identifier for the translator
         """
         raise NotImplementedError("subclasses should return a unique string id")
+
+    @classmethod
+    def versioned_id(cls):
+        return '{id}@{version}'.format(
+            id=cls.translator_id(),
+            version=cls.__version__ or 'UNKNOWN_VERSION'
+        )
 
     @staticmethod
     def parse(raw_metadata_bytes):
