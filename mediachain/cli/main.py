@@ -14,7 +14,8 @@ def set_grpc_verbosity():
 set_grpc_verbosity()
 
 from mediachain.reader import api
-from mediachain.datastore import set_use_ipfs_for_raw_data
+from mediachain.reader.utils import dump
+from mediachain.datastore import set_use_ipfs_for_raw_data, get_db
 from mediachain.datastore.ipfs import set_ipfs_config
 from mediachain.datastore.rpc import set_rpc_datastore_config, close_db
 from mediachain.writer import Writer
@@ -129,10 +130,28 @@ def main(arguments=None):
                                     ' on disk.',
                                default=False)
 
+    datastore_get_parser = subparsers.add_parser(
+        'datastore_get',
+        help='Get and print an object from the datastore'
+    )
+    datastore_get_parser.add_argument('object_id',
+                                      type=str,
+                                      help='multihash id for datastore object')
 
     def get_cmd(ns):
         transactor = TransactorClient(ns.host, ns.port)
         api.get_and_print_object(transactor, ns.object_id)
+
+    def datastore_get_cmd(ns):
+        datastore = get_db()
+        obj = datastore.get(ns.object_id)
+        if obj:
+            try:
+                dump(obj)
+            except (ValueError, AttributeError, TypeError):
+                print(str(obj))
+        else:
+            print('No object in datastore matching key {}'.format(ns.object_id))
 
     def ingest_cmd(args):
         translator = get_translator(args.translator_id)
@@ -146,7 +165,8 @@ def main(arguments=None):
 
     SUBCOMMANDS={
         'get': get_cmd,
-        'ingest': ingest_cmd
+        'ingest': ingest_cmd,
+        'datastore_get': datastore_get_cmd,
     }
 
     ns = parser.parse_args(arguments)
