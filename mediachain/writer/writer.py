@@ -25,14 +25,22 @@ class Writer(object):
         self.download_remote_assets = download_remote_assets
 
     def write_dataset(self, dataset_iterator):
-        translator_id = dataset_iterator.translator.versioned_id()
+        translator = dataset_iterator.translator
+        translator_info = {
+            'id': translator.versioned_id(),
+        }
+        try:
+            translator_info['link'] = multihash_ref(
+                translator.__version__).to_map()
+        except (ValueError, TypeError):
+            pass
 
         for result in dataset_iterator:
             translated = result['translated']
             raw = result['raw_content']
             local_assets = result.get('local_assets', {})
             try:
-                refs = self.submit_translator_output(translator_id, translated,
+                refs = self.submit_translator_output(translator_info, translated,
                                                      raw, local_assets)
                 yield refs
             except AbortionError:
@@ -40,7 +48,7 @@ class Writer(object):
                     print_err(line.rstrip('\n'))
 
     def submit_translator_output(self,
-                                 translator_id,
+                                 translator_info,
                                  translated,
                                  raw_content,
                                  local_assets):
@@ -48,7 +56,7 @@ class Writer(object):
 
         raw_ref = self.store_raw(raw_content)
 
-        common_meta = {'translator': translator_id}
+        common_meta = {'translator': translator_info}
         canonical_meta = common_meta.copy()
         canonical_meta.update({'raw_ref': raw_ref.to_map()})
 
