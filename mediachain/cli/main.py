@@ -148,7 +148,7 @@ def main(arguments=None):
         if obj:
             try:
                 dump(obj)
-            except ValueError:
+            except (ValueError, AttributeError, TypeError):
                 print(str(obj))
         else:
             print('No object in datastore matching key {}'.format(ns.object_id))
