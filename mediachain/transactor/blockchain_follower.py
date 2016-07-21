@@ -13,7 +13,8 @@ class BlockchainFollower(object):
     def __init__(self,
                  journal_stream,
                  catchup = True,
-                 block_cache = None):
+                 block_cache = None,
+                 event_map_fn = None):
         if block_cache is None:
             block_cache = get_block_cache()
 
@@ -34,6 +35,10 @@ class BlockchainFollower(object):
         self.replay_stack = deque()
         self._event_iterator = self._event_stream()
         self._cancelled = False
+        if event_map_fn is None:
+            self.event_map_fn = lambda x: x
+        else:
+            self.event_map_fn = event_map_fn
 
     def __iter__(self):
         return self
@@ -110,17 +115,23 @@ class BlockchainFollower(object):
             block = self.cache.get(block_ref)
             entries = block.get('entries', [])
             for e in entries:
-                yield block_event_to_rpc_event(e)
+                e = self.event_map_fn(block_event_to_rpc_event(e))
+                if e is not None:
+                    yield e
             block_event = Transactor_pb2.JournalEvent()
             block_event.journalBlockEvent.reference = ref_base58(block_ref)
-            yield block_event
+            block_event = self.event_map_fn(block_event)
+            if block_event is not None:
+                yield block_event
 
         while True:
             try:
                 e = self.incoming_event_queue.get(block=False, timeout=1)
                 if e == '__abort__':
                     return
-                yield e
+                e = self.event_map_fn(e)
+                if e is not None:
+                    yield e
             except QueueEmpty:
                 time.sleep(0.2)
 
