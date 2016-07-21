@@ -54,5 +54,6 @@ def get_translator(translator_id):
     full_name = '_mediachain.translation.' + name + '.translator'
     translator_module = __import__(full_name, globals(), locals(), [name])
     translator = getattr(translator_module, name.capitalize())
+    translator.set_version(version)
 
     return translator

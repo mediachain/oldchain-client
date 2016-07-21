@@ -25,7 +25,7 @@ class Writer(object):
         self.download_remote_assets = download_remote_assets
 
     def write_dataset(self, dataset_iterator):
-        translator_id = dataset_iterator.translator.translator_id()
+        translator_id = dataset_iterator.translator.versioned_id()
 
         for result in dataset_iterator:
             translated = result['translated']
