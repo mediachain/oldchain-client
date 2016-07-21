@@ -86,9 +86,14 @@ class TransactorClient(object):
 
     def canonical_stream(self, catchup=True, timeout=None):
         def filter_and_map_event(e):
-            if e.WhichOneof('event') != 'insertCanonicalEvent':
+            ref = None
+            if e.WhichOneof('event') == 'insertCanonicalEvent':
+                ref = e.insertCanonicalEvent.reference
+            elif e.WhichOneof('event') == 'updateChainEvent':
+                ref = e.updateChainEvent.canonical.reference
+            if ref is None:
                 return None
-            return reader.get_object(self, e.insertCanonicalEvent.reference)
+            return reader.get_object(self, ref)
 
         return self.journal_stream(catchup=catchup,
                                    timeout=timeout,
