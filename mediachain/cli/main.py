@@ -123,12 +123,12 @@ def main(arguments=None):
                                help='Max json entries to parse. ' +
                                'Defaults to 0 (no maximum)',
                                default=0)
-    ingest_parser.add_argument('-d', '--download-thumbnails',
-                               type=bool,
-                               dest='download_thumbs',
-                               help='If set, download thumbnails if not found' +
-                                    ' on disk.',
-                               default=False)
+    ingest_parser.add_argument('--skip-image-downloads',
+                               dest='skip_downloads',
+                               action='store_true',
+                               help=('If set, images referenced in metadata '
+                                     'will not be downloaded and sent to the '
+                                     'datastore.'))
 
     datastore_get_parser = subparsers.add_parser(
         'datastore_get',
@@ -158,7 +158,8 @@ def main(arguments=None):
         iterator = LocalFileIterator(translator, args.dir, args.max_num)
 
         transactor = TransactorClient(args.host, args.port)
-        writer = Writer(transactor, download_remote_assets=args.download_thumbs)
+        writer = Writer(transactor,
+                        download_remote_assets=(not args.skip_downloads))
 
         for refs in writer.write_dataset(iterator):
             print('Inserted canonical: {}'.format(refs['canonical']))
