@@ -40,7 +40,7 @@ def process_asset(name, asset_data):
 
 
 # size constants for images
-THUMBNAIL_SIZE = (150, 150)
+THUMBNAIL_SIZE = (1024, 1024)
 
 
 def resize_image(image_data, size=THUMBNAIL_SIZE):
