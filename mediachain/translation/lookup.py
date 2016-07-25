@@ -21,6 +21,10 @@ class ChDir(object):
         os.chdir(self.old_dir)
 
 
+def touch(path):
+    open(path, 'a').close()
+
+
 def get_translator(translator_id):
     try:
         name, version = translator_id.split('@')
@@ -30,28 +34,26 @@ def get_translator(translator_id):
                 translator_id)
         )
 
-    ipfs = get_ipfs_datastore()  # FIXME: memoize this
-
     base_path = join(expanduser('~'), '.mediachain')
-    path = join(base_path, '_mediachain', 'translation')
+    path = join(base_path, '_mediachain', 'translation', name)
     if not os.path.exists(path):
         os.makedirs(path)
-        # print join(path, '__init__.py')
-        open(join(path, '__init__.py'), 'a').close()
-        # print join(dirname(path), '__init__.py')
-        open(join(dirname(path), '__init__.py'), 'a').close()
+        touch(join(path, '__init__.py'))
+        touch(join(dirname(path), '__init__.py'))
+        touch(join(dirname(dirname(path)), '__init__.py'))
 
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-    with ChDir(path):
-        shutil.rmtree(name, ignore_errors=True)
-        translator = ipfs.client.get(version)  # FIXME: timeout, error handling
-        os.rename(version, name)  # ipfsApi doesn't support -o
+    if not os.path.exists(join(path, version)):
+        with ChDir(path):
+            ipfs = get_ipfs_datastore()  # FIXME: memoize this
+            # FIXME: timeout, error handling
+            translator = ipfs.client.get(version)
 
     sys.path.insert(1, base_path)
 
-    full_name = '_mediachain.translation.' + name + '.translator'
+    full_name = '_mediachain.translation.{name}.{version}.translator'.format(
+        name=name,
+        version=version
+    )
     translator_module = __import__(full_name, globals(), locals(), [name])
     translator = getattr(translator_module, name.capitalize())
     translator.set_version(version)
