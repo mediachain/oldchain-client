@@ -1,14 +1,17 @@
-from mediachain.datastore import get_db
+from mediachain.datastore import get_db, get_raw_datastore
+from mediachain.datastore.utils import multihash_ref
+from mediachain.ingestion.asset_loader import make_jpeg_data_uri
 import copy
 import base58
+import requests
 from utils import dump
 
-def get_and_print_object(transactor, object_id):
-    obj = get_object(transactor, object_id)
+def get_and_print_object(transactor, object_id, fetch_images=False):
+    obj = get_object(transactor, object_id, fetch_images=fetch_images)
     dump(obj)
 
 
-def get_object(transactor, object_id):
+def get_object(transactor, object_id, fetch_images=True):
     db = get_db()
     base = db.get(object_id)
     head = transactor.get_chain_head(object_id)
@@ -21,7 +24,53 @@ def get_object(transactor, object_id):
     except KeyError as e:
         pass
 
+    if fetch_images and obj.get('type') == 'artefact':
+        return fetch_thumbnails(obj)
+
     return obj
+
+
+def fetch_thumb_from_datastore(obj):
+    try:
+        ref = multihash_ref(obj['meta']['data']['thumbnail']['link'])
+        db = get_raw_datastore()
+        thumb = db.get(ref)
+        return thumb
+    except (ValueError, LookupError) as e:
+        print 'error fetching from raw datastore: {}'.format(e)
+        return None
+
+
+def fetch_thumb_from_uri(obj):
+    try:
+        uri = obj['meta']['data']['thumbnail']['uri']
+        req = requests.get(uri)
+        return req.content
+    except (LookupError, requests.exceptions.RequestException) as e:
+        print 'error fetching from uri: {}'.format(e)
+        return None
+
+
+def fetch_thumbnails(obj):
+    def with_fallback():
+        o = copy.deepcopy(obj)
+        if 'meta' not in o:
+            o['meta'] = {}
+        if 'data' not in o['meta']:
+            o['meta']['data'] = {}
+
+        o['meta']['data']['thumbnail_base64'] = 'NO_IMAGE'
+        return o
+
+    thumb = fetch_thumb_from_datastore(obj)
+    if thumb is None:
+        thumb = fetch_thumb_from_uri(obj)
+    if thumb is None:
+        return with_fallback()
+
+    with_thumb = copy.deepcopy(obj)
+    with_thumb['meta']['data']['thumbnail_base64'] = make_jpeg_data_uri(thumb)
+    return with_thumb
 
 
 def apply_update_cell(acc, cell):
