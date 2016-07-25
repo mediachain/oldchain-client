@@ -34,20 +34,21 @@ def fetch_thumb_from_datastore(obj):
     try:
         ref = multihash_ref(obj['meta']['data']['thumbnail']['link'])
         db = get_raw_datastore()
-        thumb = db.get(ref)
+        thumb = db.get(ref, timeout=10)
         return thumb
-    except (ValueError, LookupError) as e:
-        print 'error fetching from raw datastore: {}'.format(e)
+    except (ValueError, LookupError,
+            requests.exceptions.RequestException) as e:
+        # print 'error fetching from raw datastore: {}'.format(e)
         return None
 
 
 def fetch_thumb_from_uri(obj):
     try:
         uri = obj['meta']['data']['thumbnail']['uri']
-        req = requests.get(uri)
+        req = requests.get(uri, timeout=10)
         return req.content
     except (LookupError, requests.exceptions.RequestException) as e:
-        print 'error fetching from uri: {}'.format(e)
+        # print 'error fetching from uri: {}'.format(e)
         return None
 
 
