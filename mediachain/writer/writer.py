@@ -124,19 +124,26 @@ class Writer(object):
         if data is None and self.download_remote_assets:
             data, mime = load_asset(remote_asset)
         if data is None:
-            return None
-        data = process_asset(name, data)
-        ref = self.store_raw(data)
+            ref = None
+        else:
+            data = process_asset(name, data)
+            ref = self.store_raw(data)
 
         try:
-            link_obj['origin'] = remote_asset['uri']
+            link_obj['uri'] = remote_asset['uri']
         except (TypeError, ValueError):
             pass
         if mime:
             link_obj['mime_type'] = mime
         link_obj['binary_asset'] = True
-        link_obj['link'] = ref.to_map()
-        return link_obj
+        if ref:
+            link_obj['link'] = ref.to_map()
+
+        # if we don't have a uri or an ipfs link, don't write out anything
+        if ('link' in link_obj) or ('uri' in link_obj):
+            return link_obj
+        else:
+            return None
 
     def submit_object(self, obj):
         try:
