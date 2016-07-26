@@ -24,6 +24,15 @@ class Writer(object):
         self.datastore = datastore or get_db()
         self.download_remote_assets = download_remote_assets
 
+    def update_artefact(self, artefact_ref, update_meta):
+        artefact_ref = multihash_ref(artefact_ref)
+        update_cell = {
+            'type': 'artefactUpdate',
+            'ref': artefact_ref.to_map(),
+            'meta': update_meta
+        }
+        return self.submit_object(update_cell)
+
     def write_dataset(self, dataset_iterator):
         translator = dataset_iterator.translator
         translator_info = {
