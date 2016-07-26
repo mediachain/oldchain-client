@@ -122,4 +122,4 @@ def get_object_chain(reference, acc):
     except KeyError as e:
         next_ref = None
 
-    return get_object_chain(next_ref, acc + [obj])
+    return get_object_chain(next_ref, [obj] + acc)
