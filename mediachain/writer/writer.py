@@ -11,6 +11,7 @@ from grpc.framework.interfaces.face.face import AbortionError
 from mediachain.datastore.utils import multihash_ref
 import sys
 import traceback
+import json
 
 
 def print_err(*args, **kwargs):
@@ -24,7 +25,14 @@ class Writer(object):
         self.datastore = datastore or get_db()
         self.download_remote_assets = download_remote_assets
 
-    def update_artefact(self, artefact_ref, update_meta):
+    def update_artefact(self, artefact_ref, update_meta_source):
+        if hasattr(update_meta_source, 'read'):
+            update_meta = json.load(update_meta_source)
+        elif isinstance(update_meta_source, basestring):
+            update_meta = json.loads(update_meta_source)
+        else:
+            update_meta = update_meta_source
+
         artefact_ref = multihash_ref(artefact_ref)
         update_cell = {
             'type': 'artefactUpdate',
