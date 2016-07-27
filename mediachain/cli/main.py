@@ -208,13 +208,17 @@ def main(arguments=None):
             print('Inserted canonical: {}'.format(refs['canonical']))
 
     def update_cmd(args):
-        raise NotImplementedError('Update command coming soon')
+        translator = get_translator(args.translator_id)
+        iterator = LocalFileIterator(translator, args.input_path)
+        transactor = TransactorClient(args.host, args.port)
+        writer = Writer(transactor)
+        writer.update_with_translator(args.object_id, iterator)
+        get_cmd(args)
 
     def update_direct_cmd(args):
         transactor = TransactorClient(args.host, args.port)
-        writer = Writer(transactor,
-                        download_remote_assets=(not args.skip_downloads))
-        writer.update_artefact(args.object_id, sys.stdin)
+        writer = Writer(transactor)
+        writer.update_artefact_direct(args.object_id, sys.stdin)
         print('updated {ref} with new data. fetching updated record..'.format(
           ref=args.object_id
         ))

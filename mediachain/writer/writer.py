@@ -25,7 +25,7 @@ class Writer(object):
         self.datastore = datastore or get_db()
         self.download_remote_assets = download_remote_assets
 
-    def update_artefact(self, artefact_ref, update_meta_source):
+    def update_artefact_direct(self, artefact_ref, update_meta_source):
         if hasattr(update_meta_source, 'read'):
             update_meta = json.load(update_meta_source)
         elif isinstance(update_meta_source, basestring):
@@ -40,6 +40,27 @@ class Writer(object):
             'meta': update_meta
         }
         return self.submit_object(update_cell)
+
+    def update_with_translator(self, canonical_ref, dataset_iterator):
+        translator = dataset_iterator.translator
+        translator_info = {
+            'id': translator.versioned_id(),
+        }
+        result = next(dataset_iterator)
+        translated = result['translated']
+        raw = result['raw_content']
+        local_assets = result.get('local_assets', {})
+        try:
+            refs = self.submit_translator_output(
+                translator_info,
+                translated,
+                raw,
+                local_assets,
+                existing_canonical_ref=multihash_ref(canonical_ref))
+            return refs
+        except AbortionError:
+            for line in traceback.format_exception(*sys.exc_info()):
+                print_err(line.rstrip('\n'))
 
     def write_dataset(self, dataset_iterator):
         translator = dataset_iterator.translator
@@ -68,7 +89,8 @@ class Writer(object):
                                  translator_info,
                                  translated,
                                  raw_content,
-                                 local_assets):
+                                 local_assets,
+                                 existing_canonical_ref=None):
         meta_source = multihash_ref(self.datastore.put(raw_content))
 
         raw_ref = self.store_raw(raw_content)
@@ -80,15 +102,25 @@ class Writer(object):
         canonical = translated['canonical']
         canonical = self.flatten_record(canonical, canonical_meta,
                                         local_assets, meta_source=meta_source)
-        canonical_ref = self.submit_object(canonical)
+
+        chain_refs = []
+
+        if existing_canonical_ref is None:
+            canonical_ref = self.submit_object(canonical)
+        else:
+            canonical_ref = existing_canonical_ref
+            cell = canonical
+            cell['type'] = '{type}Update'.format(type=canonical['type'])
+            cell['ref'] = existing_canonical_ref.to_map()
+            update_ref = self.submit_object(cell)
+            chain_refs.append(update_ref.multihash_base58())
 
         chain = translated.get('chain', [])
-        chain_refs = []
         for cell in chain:
             cell = self.flatten_record(cell, common_meta, local_assets)
             cell['ref'] = canonical_ref.to_map()
             chain_ref = self.submit_object(cell)
-            chain_refs += chain_ref.multihash_base58()
+            chain_refs.append(chain_ref.multihash_base58())
         return {
             'canonical': canonical_ref.multihash_base58(),
             'chain': chain_refs
