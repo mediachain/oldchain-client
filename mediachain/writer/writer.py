@@ -85,19 +85,19 @@ class Writer(object):
 
         for k, a in assets.iteritems():
             local = local_assets.get(k, None)
-            ref = self.store_asset(k, local, a)
-            if ref is None:
+            asset_link = self.store_asset(k, local, a)
+            if asset_link is None:
                 # print('Unable to store asset with key {}, removing'.format(k))
                 del record[k]
             else:
-                record[k] = ref.to_map()
+                record[k] = asset_link
 
         objects = {k: v for k, v in record.iteritems()
                    if isinstance(v, dict)}
 
         for k, o in objects.iteritems():
             flat = self.flatten_record(o, common_meta,
-                                       meta_source, local_assets)
+                                       local_assets, meta_source=meta_source)
             if is_mediachain_object(o):
                 ref = self.submit_object(flat)
                 record[k] = ref.to_map()
@@ -119,13 +119,31 @@ class Writer(object):
         return multihash_ref(ref)
 
     def store_asset(self, name, local_asset, remote_asset):
-        data = load_asset(local_asset)
+        link_obj = dict()
+        data, mime = load_asset(local_asset)
         if data is None and self.download_remote_assets:
-            data = load_asset(remote_asset)
+            data, mime = load_asset(remote_asset)
         if data is None:
+            ref = None
+        else:
+            data = process_asset(name, data)
+            ref = self.store_raw(data)
+
+        try:
+            link_obj['uri'] = remote_asset['uri']
+        except (TypeError, ValueError):
+            pass
+        if mime:
+            link_obj['mime_type'] = mime
+        link_obj['binary_asset'] = True
+        if ref:
+            link_obj['link'] = ref.to_map()
+
+        # if we don't have a uri or an ipfs link, don't write out anything
+        if ('link' in link_obj) or ('uri' in link_obj):
+            return link_obj
+        else:
             return None
-        data = process_asset(name, data)
-        return self.store_raw(data)
 
     def submit_object(self, obj):
         try:

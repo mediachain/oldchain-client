@@ -1,3 +1,4 @@
+import io
 import functools
 from grpc.beta import implementations
 from grpc.beta.interfaces import StatusCode
@@ -80,3 +81,17 @@ class RpcDatastore(object):
                 return None
             raise
         return object_for_bytes(obj_bytes)
+
+    def open(self, ref, timeout=TIMEOUT_SECS):
+        """
+        Return a file-like object with the binary representation of the
+        object identified by the given ref
+        :param ref: A multihash reference to a binary object in the datastore
+        :param timeout: Seconds to wait before aborting the RPC call
+        :return: A file-like object with the data returned
+        :raises: IOError if no object is found for the given key.
+        """
+        obj_bytes = bytes_for_object(self.get(ref, timeout=timeout))
+        if obj_bytes is None:
+            raise IOError('Unable to fetch object with key {}'.format(ref))
+        return io.BytesIO(obj_bytes)

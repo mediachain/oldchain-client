@@ -1,13 +1,13 @@
 from mediachain.datastore import get_db, get_raw_datastore
+from mediachain.datastore.utils import multihash_ref
 from mediachain.ingestion.asset_loader import make_jpeg_data_uri
 import copy
 import base58
-import json
-from pygments import highlight
+import requests
 from utils import dump
 
-def get_and_print_object(transactor, object_id):
-    obj = get_object(transactor, object_id, fetch_images=False)
+def get_and_print_object(transactor, object_id, fetch_images=False):
+    obj = get_object(transactor, object_id, fetch_images=fetch_images)
     dump(obj)
 
 
@@ -20,13 +20,36 @@ def get_object(transactor, object_id, fetch_images=True):
 
     try:
         entity_id = obj['entity']
-        obj['entity'] = get_object(transactor, entity_id, fetch_images)
+        obj['entity'] = get_object(transactor, entity_id)
     except KeyError as e:
         pass
 
     if fetch_images and obj.get('type') == 'artefact':
         return fetch_thumbnails(obj)
+
     return obj
+
+
+def fetch_thumb_from_datastore(obj):
+    try:
+        ref = multihash_ref(obj['meta']['data']['thumbnail']['link'])
+        db = get_raw_datastore()
+        thumb = db.get(ref, timeout=10)
+        return thumb
+    except (ValueError, LookupError,
+            requests.exceptions.RequestException) as e:
+        # print 'error fetching from raw datastore: {}'.format(e)
+        return None
+
+
+def fetch_thumb_from_uri(obj):
+    try:
+        uri = obj['meta']['data']['thumbnail']['uri']
+        req = requests.get(uri, timeout=10)
+        return req.content
+    except (LookupError, requests.exceptions.RequestException) as e:
+        # print 'error fetching from uri: {}'.format(e)
+        return None
 
 
 def fetch_thumbnails(obj):
@@ -40,16 +63,11 @@ def fetch_thumbnails(obj):
         o['meta']['data']['thumbnail_base64'] = 'NO_IMAGE'
         return o
 
-    try:
-        thumb_ref_bytes = obj['meta']['data']['thumbnail']['@link']
-        thumb_ref = base58.b58encode(thumb_ref_bytes)
-        db = get_raw_datastore()
-        thumb = db.get(thumb_ref)
-    except (ValueError, LookupError):
+    thumb = fetch_thumb_from_datastore(obj)
+    if thumb is None:
+        thumb = fetch_thumb_from_uri(obj)
+    if thumb is None:
         return with_fallback()
-
-    with open('/tmp/thumbnail.jpg', 'wb') as f:
-        f.write(thumb)
 
     with_thumb = copy.deepcopy(obj)
     with_thumb['meta']['data']['thumbnail_base64'] = make_jpeg_data_uri(thumb)
