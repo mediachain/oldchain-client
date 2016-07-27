@@ -93,7 +93,7 @@ class TransactorClient(object):
                 ref = e.updateChainEvent.canonical.reference
             if ref is None:
                 return None
-            return reader.get_object(self, ref)
+            return ref, reader.get_object(self, ref)
 
         return self.journal_stream(catchup=catchup,
                                    timeout=timeout,
