@@ -1,17 +1,17 @@
 from mediachain.datastore import get_db, get_raw_datastore
 from mediachain.datastore.utils import multihash_ref
-from mediachain.ingestion.asset_loader import make_jpeg_data_uri
 import copy
 import base58
 import requests
+import contextlib
 from utils import dump
 
-def get_and_print_object(transactor, object_id, fetch_images=False):
-    obj = get_object(transactor, object_id, fetch_images=fetch_images)
+def get_and_print_object(transactor, object_id):
+    obj = get_object(transactor, object_id)
     dump(obj)
 
 
-def get_object(transactor, object_id, fetch_images=True):
+def get_object(transactor, object_id):
     db = get_db()
     base = db.get(object_id)
     head = transactor.get_chain_head(object_id)
@@ -24,54 +24,31 @@ def get_object(transactor, object_id, fetch_images=True):
     except KeyError as e:
         pass
 
-    if fetch_images and obj.get('type') == 'artefact':
-        return fetch_thumbnails(obj)
-
     return obj
 
 
-def fetch_thumb_from_datastore(obj):
+def open_binary_asset(asset, timeout=None):
+    if not asset.get('binary_asset', False):
+        return None
+
+    # try to load from ipfs if `link` is present
     try:
-        ref = multihash_ref(obj['meta']['data']['thumbnail']['link'])
+        ref = multihash_ref(asset['link'])
         db = get_raw_datastore()
-        thumb = db.get(ref, timeout=10)
-        return thumb
-    except (ValueError, LookupError,
-            requests.exceptions.RequestException) as e:
-        # print 'error fetching from raw datastore: {}'.format(e)
-        return None
+        return contextlib.closing(db.open(ref, timeout=timeout))
+    except (LookupError, ValueError, requests.exceptions.RequestException):
+        pass
 
-
-def fetch_thumb_from_uri(obj):
+    # If not, try to get the http url if present
     try:
-        uri = obj['meta']['data']['thumbnail']['uri']
-        req = requests.get(uri, timeout=10)
-        return req.content
-    except (LookupError, requests.exceptions.RequestException) as e:
-        # print 'error fetching from uri: {}'.format(e)
-        return None
+        uri = asset['uri']
+        resp = requests.get(uri, stream=True, timeout=timeout)
+        return contextlib.closing(resp.raw)
+    except (LookupError, requests.exceptions.RequestException):
+        pass
 
-
-def fetch_thumbnails(obj):
-    def with_fallback():
-        o = copy.deepcopy(obj)
-        if 'meta' not in o:
-            o['meta'] = {}
-        if 'data' not in o['meta']:
-            o['meta']['data'] = {}
-
-        o['meta']['data']['thumbnail_base64'] = 'NO_IMAGE'
-        return o
-
-    thumb = fetch_thumb_from_datastore(obj)
-    if thumb is None:
-        thumb = fetch_thumb_from_uri(obj)
-    if thumb is None:
-        return with_fallback()
-
-    with_thumb = copy.deepcopy(obj)
-    with_thumb['meta']['data']['thumbnail_base64'] = make_jpeg_data_uri(thumb)
-    return with_thumb
+    # return None if no ipfs link or uri, or if there's a download error
+    return None
 
 
 def merge(a, b, path=None):
