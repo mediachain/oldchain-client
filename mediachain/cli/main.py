@@ -155,6 +155,12 @@ def main(arguments=None):
                                type=str,
                                help=('Path to metadata source.\n'
                                      'Should be a single file.'))
+    update_parser.add_argument('--skip-image-downloads',
+                               dest='skip_downloads',
+                               action='store_true',
+                               help=('If set, images referenced in metadata '
+                                     'will not be downloaded and sent to the '
+                                     'datastore.'))
 
     update_direct_parser = subparsers.add_parser(
         'update-direct',
@@ -211,13 +217,15 @@ def main(arguments=None):
         translator = get_translator(args.translator_id)
         iterator = LocalFileIterator(translator, args.input_path)
         transactor = TransactorClient(args.host, args.port)
-        writer = Writer(transactor)
+        writer = Writer(transactor,
+                        download_remote_assets=(not args.skip_downloads))
         writer.update_with_translator(args.object_id, iterator)
         get_cmd(args)
 
     def update_direct_cmd(args):
         transactor = TransactorClient(args.host, args.port)
-        writer = Writer(transactor)
+        writer = Writer(transactor,
+                        download_remote_assets=(not args.skip_downloads))
         writer.update_artefact_direct(args.object_id, sys.stdin)
         print('updated {ref} with new data. fetching updated record..'.format(
           ref=args.object_id
