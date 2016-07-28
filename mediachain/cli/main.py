@@ -104,15 +104,24 @@ def main(arguments=None):
 
     ingest_parser = subparsers.add_parser(
         'ingest',
-        help='Ingest a directory of scraped Getty JSON data'
+        help='Ingest metadata into the system using a schema translator'
     )
+
+    translator_id_help_text = ('identifier for a schema translator'
+                               'e.g. getty@QmF00... \n'
+                               'Must be in the format of name@hash where '
+                               'name is the name of a translator, and '
+                               'hash is an ipfs multihash that resolves '
+                               'to a specific version of that translator'
+                               )
+
     ingest_parser.add_argument('translator_id',
                                type=str,
-                               help='identifier for a schema translator' +
-                               'e.g. GettyTranslator/0.1')
-    ingest_parser.add_argument('dir',
+                               help=translator_id_help_text)
+    ingest_parser.add_argument('input-path',
                                type=str,
-                               help='Path to getty json directory root')
+                               help=('Path to metadata source.\n'
+                                     'Can be a directory or single file'))
     ingest_parser.add_argument('--skip-validation',
                                dest='skip_validation',
                                action='store_true',
@@ -130,8 +139,41 @@ def main(arguments=None):
                                      'will not be downloaded and sent to the '
                                      'datastore.'))
 
+    update_parser = subparsers.add_parser(
+        'update',
+        help=('Update an existing record with new data using a record in an '
+              'external format and a schema translator.')
+    )
+    update_parser.add_argument('object_id',
+                               type=str,
+                               help=('Multihash reference to a mediachain '
+                                     'canonical record'))
+    update_parser.add_argument('translator_id',
+                               type=str,
+                               help=translator_id_help_text)
+    update_parser.add_argument('input_path',
+                               type=str,
+                               help=('Path to metadata source.\n'
+                                     'Should be a single file.'))
+    update_parser.add_argument('--skip-image-downloads',
+                               dest='skip_downloads',
+                               action='store_true',
+                               help=('If set, images referenced in metadata '
+                                     'will not be downloaded and sent to the '
+                                     'datastore.'))
+
+    update_direct_parser = subparsers.add_parser(
+        'update-direct',
+        help='Update an existing record by reading valid mediachain-format '
+             'metadata from standard input.'
+    )
+    update_direct_parser.add_argument('object_id',
+                                      type=str,
+                                      help=('Multihash reference to a '
+                                            'mediachain canonical record'))
+
     datastore_get_parser = subparsers.add_parser(
-        'datastore_get',
+        'datastore-get',
         help='Get and print an object from the datastore'
     )
     datastore_get_parser.add_argument('object_id',
@@ -155,7 +197,7 @@ def main(arguments=None):
 
     def ingest_cmd(args):
         translator = get_translator(args.translator_id)
-        iterator = LocalFileIterator(translator, args.dir, args.max_num)
+        iterator = LocalFileIterator(translator, args.input_path, args.max_num)
 
         transactor = TransactorClient(args.host, args.port)
         writer = Writer(transactor,
@@ -164,10 +206,31 @@ def main(arguments=None):
         for refs in writer.write_dataset(iterator):
             print('Inserted canonical: {}'.format(refs['canonical']))
 
+    def update_cmd(args):
+        translator = get_translator(args.translator_id)
+        iterator = LocalFileIterator(translator, args.input_path)
+        transactor = TransactorClient(args.host, args.port)
+        writer = Writer(transactor,
+                        download_remote_assets=(not args.skip_downloads))
+        writer.update_with_translator(args.object_id, iterator)
+        get_cmd(args)
+
+    def update_direct_cmd(args):
+        transactor = TransactorClient(args.host, args.port)
+        writer = Writer(transactor)
+        writer.update_artefact_direct(args.object_id, sys.stdin)
+        print('updated {ref} with new data. fetching updated record..'.format(
+          ref=args.object_id
+        ))
+        get_cmd(args)
+
+
     SUBCOMMANDS={
         'get': get_cmd,
         'ingest': ingest_cmd,
-        'datastore_get': datastore_get_cmd,
+        'datastore-get': datastore_get_cmd,
+        'update': update_cmd,
+        'update-direct': update_direct_cmd
     }
 
     ns = parser.parse_args(arguments)
