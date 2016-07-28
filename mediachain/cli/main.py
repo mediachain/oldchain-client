@@ -171,13 +171,6 @@ def main(arguments=None):
                                       type=str,
                                       help=('Multihash reference to a '
                                             'mediachain canonical record'))
-    update_direct_parser.add_argument(
-        '--skip-image-downloads',
-        dest='skip_downloads',
-        action='store_true',
-        help=('If set, images referenced in metadata '
-              'will not be downloaded and sent to the '
-              'datastore.'))
 
     datastore_get_parser = subparsers.add_parser(
         'datastore-get',
@@ -224,8 +217,7 @@ def main(arguments=None):
 
     def update_direct_cmd(args):
         transactor = TransactorClient(args.host, args.port)
-        writer = Writer(transactor,
-                        download_remote_assets=(not args.skip_downloads))
+        writer = Writer(transactor)
         writer.update_artefact_direct(args.object_id, sys.stdin)
         print('updated {ref} with new data. fetching updated record..'.format(
           ref=args.object_id
