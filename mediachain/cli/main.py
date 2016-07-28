@@ -228,17 +228,16 @@ def main(arguments=None):
     SUBCOMMANDS={
         'get': get_cmd,
         'ingest': ingest_cmd,
-        'datastore_get': datastore_get_cmd,
+        'datastore-get': datastore_get_cmd,
         'update': update_cmd,
-        'update_direct': update_direct_cmd
+        'update-direct': update_direct_cmd
     }
 
     ns = parser.parse_args(arguments)
     if getattr(ns, 'skip_validation', False):
         os.environ['MEDIACHAIN_SKIP_SCHEMA_VALIDATION'] = 'true'
 
-    subcmd = ns.subcommand.replace('-', '_')
-    fn = SUBCOMMANDS[subcmd]
+    fn = SUBCOMMANDS[ns.subcommand]
 
     configure_datastore(ns)
     configure_ipfs(ns)
