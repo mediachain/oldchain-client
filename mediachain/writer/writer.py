@@ -12,6 +12,7 @@ from mediachain.datastore.utils import multihash_ref
 import sys
 import traceback
 import json
+import hashlib
 
 
 def print_err(*args, **kwargs):
@@ -177,6 +178,7 @@ class Writer(object):
         else:
             data = process_asset(name, data)
             ref = self.store_raw(data)
+            link_obj['hash_sha256'] = hashlib.sha256(data).hexdigest()
 
         try:
             link_obj['uri'] = remote_asset['uri']
