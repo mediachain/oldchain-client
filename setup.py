@@ -22,7 +22,7 @@ class build_py(_build_py):
         _build_py.run(self)
 
 setup(
-    version='0.1.7',
+    version='0.1.8',
     name='mediachain-client',
     description='mediachain reader command line interface',
     author='Mediachain Labs',
