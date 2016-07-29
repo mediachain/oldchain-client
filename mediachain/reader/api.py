@@ -4,6 +4,7 @@ import copy
 import base58
 import requests
 import contextlib
+from io import BytesIO
 from utils import dump
 
 def get_and_print_object(transactor, object_id):
@@ -42,8 +43,9 @@ def open_binary_asset(asset, timeout=None):
     # If not, try to get the http url if present
     try:
         uri = asset['uri']
-        resp = requests.get(uri, stream=True, timeout=timeout)
-        return contextlib.closing(resp.raw)
+        resp = requests.get(uri, timeout=timeout)
+        f = BytesIO(resp.content)
+        return contextlib.closing(f)
     except (LookupError, requests.exceptions.RequestException):
         pass
 
