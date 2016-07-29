@@ -118,7 +118,7 @@ def main(arguments=None):
     ingest_parser.add_argument('translator_id',
                                type=str,
                                help=translator_id_help_text)
-    ingest_parser.add_argument('input-path',
+    ingest_parser.add_argument('input_path',
                                type=str,
                                help=('Path to metadata source.\n'
                                      'Can be a directory or single file'))
