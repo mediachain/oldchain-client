@@ -69,11 +69,14 @@ The goal of the translator is to pull a subset of fields out of the original
 metadata to enable efficient indexing and search by other mediachain clients.
  
 #### Translator IDs
-Each translator should have a unique string identifier that can be used by
+~~Each translator should have a unique string identifier that can be used by
 clients to figure out the source of the data.  The string should contain a
 version number, which should be updated whenever the translator is updated.
 For example, the current Getty images translator has the identifier 
-`GettyTranslator/0.1`.
+`GettyTranslator/0.1`.~~
+
+Please see [this document](https://github.com/mediachain/mediachain/blob/master/docs/translators.md#translator-lifecycle)
+for more on how translators are versioned and distributed.
 
 The id of the translator is written into the mediachain records to help
 clients understand how they were created.
