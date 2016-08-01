@@ -135,7 +135,7 @@ class Writer(object):
 
         for k, a in assets.iteritems():
             local = local_assets.get(k, None)
-            asset_link = self.store_asset(k, local, a)
+            asset_link = self.store_asset(local, a)
             if asset_link is None:
                 # print('Unable to store asset with key {}, removing'.format(k))
                 del record[k]
@@ -168,7 +168,7 @@ class Writer(object):
         ref = store.put(raw_content)
         return multihash_ref(ref)
 
-    def store_asset(self, name, local_asset, remote_asset):
+    def store_asset(self, local_asset, remote_asset):
         link_obj = dict()
         data, mime = load_asset(local_asset)
         if data is None and self.download_remote_assets:
@@ -176,7 +176,6 @@ class Writer(object):
         if data is None:
             ref = None
         else:
-            data = process_asset(name, data)
             ref = self.store_raw(data)
             link_obj['hash_sha256'] = hashlib.sha256(data).hexdigest()
 
