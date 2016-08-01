@@ -178,6 +178,7 @@ class Writer(object):
         else:
             ref = self.store_raw(data)
             link_obj['hash_sha256'] = hashlib.sha256(data).hexdigest()
+            link_obj['content_size'] = len(data)
 
         try:
             link_obj['uri'] = remote_asset['uri']
