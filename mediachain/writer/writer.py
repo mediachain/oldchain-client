@@ -3,7 +3,7 @@ from __future__ import print_function
 
 from copy import deepcopy
 import re
-from mediachain.ingestion.asset_loader import load_asset, process_asset
+from mediachain.ingestion.asset_loader import load_asset
 from mediachain.translation.utils import is_asset, is_canonical, \
     is_mediachain_object
 from mediachain.datastore import get_db, get_raw_datastore
