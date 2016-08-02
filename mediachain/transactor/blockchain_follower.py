@@ -92,7 +92,7 @@ class BlockchainFollower(object):
             self.block_ref_queue.put(chain)
 
     def _receive_incoming_events(self):
-        def worker():
+        def event_receive_worker():
             try:
                 stream = self.stream_func()
                 for event in stream:
@@ -115,7 +115,7 @@ class BlockchainFollower(object):
                     return
                 else:
                     raise
-        with_retry(worker, max_retry_attempts=self.max_retry)
+        with_retry(event_receive_worker, max_retry_attempts=self.max_retry)
 
     def _event_stream(self):
         # block until catchup thread completes
