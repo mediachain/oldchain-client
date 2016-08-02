@@ -224,5 +224,6 @@ def duplicate_canonical_ref(grpc_error):
 def grpc_error_meta(grpc_error):
     meta = dict()
     for item in grpc_error.initial_metadata:
-        meta[item.key] = item.value
+        k = item.key.lower()
+        meta[k] = item.value
     return meta
