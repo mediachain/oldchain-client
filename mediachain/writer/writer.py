@@ -201,7 +201,7 @@ class Writer(object):
             else:
                 return self.transactor.update_chain(obj)
         except AbortionError as e:
-            ref_str = duplicate_canonical_ref(e.details)
+            ref_str = duplicate_canonical_ref(e)
             if ref_str is None:
                 raise
 
@@ -216,20 +216,14 @@ def merge_meta(obj, meta):
     obj['meta'] = merged
 
 
-# TODO(yusef): replace string parsing hack with grpc error metadata
-# requires support in grpc-java (in master but not yet released)
-
-# this regex will only work for base58 encoded sha2-256 hashes,
-# and will break if we ever change the error message :(
-duplicate_insert_pattern = re.compile(
-    '.*Duplicate Journal Insert.*(Qm[1-9a-km-zA-HJ-NP-Z]{44}).*'
-)
+def duplicate_canonical_ref(grpc_error):
+    meta = grpc_error_meta(grpc_error)
+    return meta.get('reference')
 
 
-def duplicate_canonical_ref(grpc_error_str):
-    m = re.match(duplicate_insert_pattern, grpc_error_str)
-    if not m:
-        return None
-    return m.group(1)
-
-
+def grpc_error_meta(grpc_error):
+    meta = dict()
+    for item in grpc_error.initial_metadata:
+        k = item.key.lower()
+        meta[k] = item.value
+    return meta
