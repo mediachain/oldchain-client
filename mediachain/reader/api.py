@@ -28,7 +28,7 @@ def get_object(transactor, object_id):
     return obj
 
 
-def open_binary_asset(asset, timeout=None):
+def open_binary_asset(asset, timeout=10):
     if not asset.get('binary_asset', False):
         return None
 
