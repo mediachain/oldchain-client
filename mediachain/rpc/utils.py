@@ -12,6 +12,7 @@ RETRYABLE_ERRORS = [
 
 
 def with_retry(func, *args, **kwargs):
+    max_attempts = kwargs.pop('max_retry_attempts', MAX_ATTEMPTS)
     try:
         operation = str(func._method)
     except AttributeError:
@@ -29,7 +30,7 @@ def with_retry(func, *args, **kwargs):
             # pylint: disable=raising-non-exception
             if e.code not in RETRYABLE_ERRORS:
                 raise e
-            if attempts >= MAX_ATTEMPTS:
+            if attempts >= max_attempts:
                 print('Operation {} failed after {} attempts'.format(
                     operation, attempts
                 ))
