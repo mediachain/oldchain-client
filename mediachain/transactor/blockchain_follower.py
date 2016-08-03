@@ -40,8 +40,7 @@ class BlockchainFollower(object):
                 target=self._perform_catchup)
         self.incoming_event_thread = threading.Thread(
             name='journal-stream-listener',
-            target=self._receive_incoming_events
-        )
+            target=self._receive_incoming_events)
         self._event_iterator = self._event_stream()
 
     def __iter__(self):
