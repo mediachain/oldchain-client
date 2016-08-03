@@ -6,39 +6,42 @@ from collections import deque
 from mediachain.transactor.block_cache import get_block_cache
 from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
 from mediachain.datastore.utils import ref_base58
+from mediachain.rpc.utils import with_retry
 from grpc.beta.interfaces import StatusCode
 from grpc.framework.interfaces.face.face import AbortionError
 
+
 class BlockchainFollower(object):
     def __init__(self,
-                 journal_stream,
+                 stream_func,
                  catchup = True,
                  block_cache = None,
-                 event_map_fn = None):
+                 event_map_fn = None,
+                 max_retry=20):
         if block_cache is None:
             block_cache = get_block_cache()
 
+        self.max_retry = max_retry
         self.cache = block_cache
-        self.journal_stream = journal_stream
+        self.stream_func = stream_func
         self.block_ref_queue = Queue()
         self.incoming_event_queue = Queue()
         self.caught_up = False
         self.should_catchup = catchup
         self.first_incoming_event_received = False
-        self.catchup_thread = threading.Thread(
-            name='blockchain-catchup',
-            target=self._perform_catchup)
-        self.incoming_event_thread = threading.Thread(
-            name='journal-stream-listener',
-            target=self._receive_incoming_events
-        )
         self.replay_stack = deque()
-        self._event_iterator = self._event_stream()
         self._cancelled = False
         if event_map_fn is None:
             self.event_map_fn = lambda x: x
         else:
             self.event_map_fn = event_map_fn
+        self.catchup_thread = threading.Thread(
+                name='blockchain-catchup',
+                target=self._perform_catchup)
+        self.incoming_event_thread = threading.Thread(
+            name='journal-stream-listener',
+            target=self._receive_incoming_events)
+        self._event_iterator = self._event_stream()
 
     def __iter__(self):
         return self
@@ -49,7 +52,7 @@ class BlockchainFollower(object):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, *args):
         self.cancel()
         return False
 
@@ -62,7 +65,6 @@ class BlockchainFollower(object):
         self._cancelled = True
         self.block_ref_queue.put('__abort__')
         self.incoming_event_queue.put('__abort__')
-        self.journal_stream.cancel()
 
     def _perform_catchup(self):
         if not self.should_catchup:
@@ -89,23 +91,30 @@ class BlockchainFollower(object):
             self.block_ref_queue.put(chain)
 
     def _receive_incoming_events(self):
-        try:
-            for event in self.journal_stream:
-                if not self.first_incoming_event_received:
-                    self.first_incoming_event_received = True
-                    block_ref = block_event_ref(event)
-                    if block_ref is None:
-                        self.block_ref_queue.put('__abort__')
-                        self.caught_up = True
-                    else:
-                        self.block_ref_queue.put(block_ref)
-                self.incoming_event_queue.put(event)
-        except AbortionError as e:
-            if self._cancelled and e.code == StatusCode.CANCELLED:
-                return
-            else:
-                raise
+        def event_receive_worker():
+            try:
+                stream = self.stream_func()
+                for event in stream:
+                    if getattr(self, '_cancelled'):
+                        stream.cancel()
+                        return
 
+                    if not self.first_incoming_event_received:
+                        self.first_incoming_event_received = True
+                        block_ref = block_event_ref(event)
+                        if block_ref is None:
+                            self.block_ref_queue.put('__abort__')
+                            self.caught_up = True
+                        else:
+                            self.block_ref_queue.put(block_ref)
+
+                    self.incoming_event_queue.put(event)
+            except AbortionError as e:
+                if self._cancelled and e.code == StatusCode.CANCELLED:
+                    return
+                else:
+                    raise
+        with_retry(event_receive_worker, max_retry_attempts=self.max_retry)
 
     def _event_stream(self):
         # block until catchup thread completes

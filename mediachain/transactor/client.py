@@ -78,9 +78,10 @@ class TransactorClient(object):
         :return:
         """
         req = Transactor_pb2.JournalStreamRequest()
-        stream = self.client.JournalStream(req, timeout)
-        follower = BlockchainFollower(stream, catchup,
-                                      event_map_fn=event_map_fn)
+        follower = BlockchainFollower(
+            lambda: self.client.JournalStream(req, timeout),
+            catchup,
+            event_map_fn=event_map_fn)
         follower.start()
         return follower
 
