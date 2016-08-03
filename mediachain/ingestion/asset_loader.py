@@ -37,26 +37,5 @@ def load_asset(asset):
     return None, None
 
 
-def process_asset(name, asset_data):
-    if name == 'thumbnail':
-        return resize_image(asset_data, THUMBNAIL_SIZE)
-    return asset_data
-
-
-# size constants for images
-THUMBNAIL_SIZE = (1024, 1024)
-
-
-def resize_image(image_data, size=THUMBNAIL_SIZE):
-    img = Image.open(StringIO(image_data))
-    if (img.size[0] > size[0]) or (img.size[1] > size[1]):
-        img.thumbnail(size, Image.ANTIALIAS)
-    buf = StringIO()
-    img.save(buf, "JPEG")
-    buf.seek(0)
-    data = buf.read()
-    return data
-
-
 def make_jpeg_data_uri(data):
     return 'data:image/jpeg;base64,' + base64.urlsafe_b64encode(data)
