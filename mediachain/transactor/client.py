@@ -50,7 +50,11 @@ class TransactorClient(object):
         ref = with_retry(self.client.UpdateChain, req, timeout)
         return MultihashReference.from_base58(ref.reference)
 
-    def journal_stream(self, catchup=True, timeout=None, event_map_fn=None):
+    def journal_stream(self,
+                       catchup=True,
+                       last_known_block_ref=None,
+                       timeout=None,
+                       event_map_fn=None):
         """
         A stream of journal events from the mediachain transactor network.
         If `catchup` is True (the default), will fetch the entire history
@@ -81,11 +85,15 @@ class TransactorClient(object):
         follower = BlockchainFollower(
             lambda: self.client.JournalStream(req, timeout),
             catchup,
+            last_known_block_ref=last_known_block_ref,
             event_map_fn=event_map_fn)
         follower.start()
         return follower
 
-    def canonical_stream(self, catchup=True, timeout=None):
+    def canonical_stream(self,
+                         catchup=True,
+                         last_known_block_ref=None,
+                         timeout=None):
         def filter_and_map_event(e):
             ref = None
             if e.WhichOneof('event') == 'insertCanonicalEvent':
@@ -97,6 +105,7 @@ class TransactorClient(object):
             return ref, reader.get_object(self, ref)
 
         return self.journal_stream(catchup=catchup,
+                                   last_known_block_ref=last_known_block_ref,
                                    timeout=timeout,
                                    event_map_fn=filter_and_map_event)
 

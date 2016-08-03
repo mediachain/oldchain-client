@@ -15,6 +15,7 @@ class BlockchainFollower(object):
     def __init__(self,
                  stream_func,
                  catchup = True,
+                 last_known_block_ref=None,
                  block_cache = None,
                  event_map_fn = None,
                  max_retry=20):
@@ -28,6 +29,7 @@ class BlockchainFollower(object):
         self.incoming_event_queue = Queue()
         self.caught_up = False
         self.should_catchup = catchup
+        self.last_known_block_ref = ref_base58(last_known_block_ref)
         self.first_incoming_event_received = False
         self.replay_stack = deque()
         self._cancelled = False
@@ -75,6 +77,10 @@ class BlockchainFollower(object):
             if ref == '__abort__':
                 return
 
+            if ref_base58(ref) == self.last_known_block_ref:
+                self.caught_up = True
+                return
+
             block = self.cache.get(ref)
 
             if block is None:
@@ -82,6 +88,7 @@ class BlockchainFollower(object):
                 return
 
             self.replay_stack.appendleft(ref)
+            self.last_known_block_ref = ref
 
             chain = chain_ref(block)
             if chain is None:
