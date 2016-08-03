@@ -27,11 +27,12 @@ class BlockchainFollower(object):
         self.stream_func = stream_func
         self.block_ref_queue = Queue()
         self.incoming_event_queue = Queue()
-        self.caught_up = False
+        self.block_replay_queue = Queue()
+        self.catchup_begin = threading.Event()
+        self.catchup_complete = threading.Event()
+
         self.should_catchup = catchup
         self.last_known_block_ref = ref_base58(last_known_block_ref)
-        self.first_incoming_event_received = False
-        self.replay_stack = deque()
         self._cancelled = False
         if event_map_fn is None:
             self.event_map_fn = lambda x: x
@@ -67,38 +68,67 @@ class BlockchainFollower(object):
         self._cancelled = True
         self.block_ref_queue.put('__abort__')
         self.incoming_event_queue.put('__abort__')
+        # setting these events will cause the __abort__ messages to be
+        # pulled from the queues.
+        self.catchup_begin.set()
+        self.catchup_complete.set()
+
+    def _clear_queues(self):
+        with self.block_ref_queue.mutex:
+            self.block_ref_queue.queue.clear()
+        with self.block_replay_queue.mutex:
+            self.block_replay_queue.queue.clear()
+        with self.incoming_event_queue.mutex:
+            self.incoming_event_queue.queue.clear()
 
     def _perform_catchup(self):
         if not self.should_catchup:
             return
 
         while True:
+            # block until the event consumer thread tells us to start the
+            # blockchain catchup process
+            self.catchup_begin.wait()
+
             ref = self.block_ref_queue.get()
             if ref == '__abort__':
                 return
 
             if ref_base58(ref) == self.last_known_block_ref:
-                self.caught_up = True
-                return
+                print('hit last known block: {}'.format(
+                    self.last_known_block_ref
+                ))
+                self.catchup_complete.set()
+                continue
 
             block = self.cache.get(ref)
 
             if block is None:
+                # FIXME: we need to handle this better
+                # should throw or otherwise signal that something went wrong
                 print('Could not get block with ref {}'.format(ref))
                 return
 
-            self.replay_stack.appendleft(ref)
-            self.last_known_block_ref = ref
+            self.block_replay_queue.put(ref)
 
             chain = chain_ref(block)
             if chain is None:
                 # print('Reached genesis block {}'.format(ref))
-                self.caught_up = True
-                return
+                self.catchup_complete.set()
+                continue
+
             self.block_ref_queue.put(chain)
 
     def _receive_incoming_events(self):
         def event_receive_worker():
+            # first clear out all the queues, and event state,
+            # in case we're being called from the retry helper after a stream
+            # interruption
+            self.catchup_complete.clear()
+            self.catchup_begin.clear()
+            self._clear_queues()
+            first_event_received = False
+
             try:
                 stream = self.stream_func()
                 for event in stream:
@@ -106,14 +136,14 @@ class BlockchainFollower(object):
                         stream.cancel()
                         return
 
-                    if not self.first_incoming_event_received:
-                        self.first_incoming_event_received = True
+                    if not first_event_received:
+                        first_event_received = True
                         block_ref = block_event_ref(event)
                         if block_ref is None:
-                            self.block_ref_queue.put('__abort__')
-                            self.caught_up = True
+                            self.catchup_complete.set()
                         else:
                             self.block_ref_queue.put(block_ref)
+                            self.catchup_begin.set()
 
                     self.incoming_event_queue.put(event)
             except AbortionError as e:
@@ -124,27 +154,39 @@ class BlockchainFollower(object):
         with_retry(event_receive_worker, max_retry_attempts=self.max_retry)
 
     def _event_stream(self):
-        # block until catchup thread completes
-        self.catchup_thread.join()
-
-        for block_ref in self.replay_stack:
-            block = self.cache.get(block_ref)
-            entries = block.get('entries', [])
-            for e in entries:
-                e = self.event_map_fn(block_event_to_rpc_event(e))
-                if e is not None:
-                    yield e
-            block_event = Transactor_pb2.JournalEvent()
-            block_event.journalBlockEvent.reference = ref_base58(block_ref)
-            block_event = self.event_map_fn(block_event)
-            if block_event is not None:
-                yield block_event
-
         while True:
+            # wait until catchup process signals that it's complete
+            # this will be immediate if catchup is not in progress
+            self.catchup_complete.wait()
+
+            # get all values from the catchup queue and yield their entries
+            while not self.block_replay_queue.empty():
+                block_ref = self.block_replay_queue.get()
+                print('Replaying block: {}'.format(block_ref))
+                block = self.cache.get(block_ref)
+                entries = block.get('entries', [])
+                for e in entries:
+                    e = self.event_map_fn(block_event_to_rpc_event(e))
+                    if e is not None:
+                        yield e
+                self.last_known_block_ref = block_ref
+                block_event = Transactor_pb2.JournalEvent()
+                block_event.journalBlockEvent.reference = ref_base58(block_ref)
+                block_event = self.event_map_fn(block_event)
+                if block_event is not None:
+                    yield block_event
+
+            # Try to pull an event off of the incoming event queue
+            # If there's no event received within a second,
+            # sleep for a bit and loop back.
             try:
                 e = self.incoming_event_queue.get(block=False, timeout=1)
                 if e == '__abort__':
                     return
+                block_ref = block_event_ref(e)
+                if block_ref is not None:
+                    self.last_known_block_ref = block_ref
+
                 e = self.event_map_fn(e)
                 if e is not None:
                     yield e
