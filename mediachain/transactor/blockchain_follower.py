@@ -182,8 +182,7 @@ class BlockchainFollower(object):
             if self.cancel_flag.is_set():
                 return
             # Try to pull an event off of the incoming event queue
-            # If there's no event received within a second,
-            # sleep for a bit and loop back.
+            # If there's no event received within a second, loop back.
             try:
                 e = self.incoming_event_queue.get(block=False, timeout=1)
                 block_ref = block_event_ref(e)
@@ -194,7 +193,7 @@ class BlockchainFollower(object):
                 if e is not None:
                     yield e
             except QueueEmpty:
-                time.sleep(0.2)
+                pass
 
 
 def chain_ref(block):
