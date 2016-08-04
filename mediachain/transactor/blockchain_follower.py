@@ -2,7 +2,6 @@ import threading
 import time
 from base58 import b58encode
 from Queue import Queue, Empty as QueueEmpty
-from collections import deque
 from mediachain.transactor.block_cache import get_block_cache
 from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
 from mediachain.datastore.utils import ref_base58
@@ -30,10 +29,10 @@ class BlockchainFollower(object):
         self.block_replay_queue = Queue()
         self.catchup_begin = threading.Event()
         self.catchup_complete = threading.Event()
+        self.cancel_flag = threading.Event()
 
         self.should_catchup = catchup
         self.last_known_block_ref = ref_base58(last_known_block_ref)
-        self._cancelled = False
         if event_map_fn is None:
             self.event_map_fn = lambda x: x
         else:
@@ -65,15 +64,12 @@ class BlockchainFollower(object):
 
     def cancel(self):
         # print('BlockchainFollower cancel')
-        self._cancelled = True
-        self.block_ref_queue.put('__abort__')
-        self.incoming_event_queue.put('__abort__')
-        # setting these events will cause the __abort__ messages to be
-        # pulled from the queues.
-        self.catchup_begin.set()
-        self.catchup_complete.set()
+        self.cancel_flag.set()
 
     def _clear_queues(self):
+        if self.cancel_flag.is_set():
+            return
+
         with self.block_ref_queue.mutex:
             self.block_ref_queue.queue.clear()
         with self.block_replay_queue.mutex:
@@ -86,12 +82,15 @@ class BlockchainFollower(object):
             return
 
         while True:
+            if self.cancel_flag.is_set():
+                return
+
             # block until the event consumer thread tells us to start the
             # blockchain catchup process
             self.catchup_begin.wait()
 
             ref = self.block_ref_queue.get()
-            if ref == '__abort__':
+            if self.cancel_flag.is_set():
                 return
 
             if ref_base58(ref) == self.last_known_block_ref:
@@ -132,7 +131,7 @@ class BlockchainFollower(object):
             try:
                 stream = self.stream_func()
                 for event in stream:
-                    if getattr(self, '_cancelled'):
+                    if self.cancel_flag.is_set():
                         stream.cancel()
                         return
 
@@ -147,7 +146,7 @@ class BlockchainFollower(object):
 
                     self.incoming_event_queue.put(event)
             except AbortionError as e:
-                if self._cancelled and e.code == StatusCode.CANCELLED:
+                if self.cancel_flag.is_set() and e.code == StatusCode.CANCELLED:
                     return
                 else:
                     raise
@@ -155,12 +154,16 @@ class BlockchainFollower(object):
 
     def _event_stream(self):
         while True:
+            if self.cancel_flag.is_set():
+                return
             # wait until catchup process signals that it's complete
             # this will be immediate if catchup is not in progress
             self.catchup_complete.wait()
 
             # get all values from the catchup queue and yield their entries
             while not self.block_replay_queue.empty():
+                if self.cancel_flag.is_set():
+                    return
                 block_ref = self.block_replay_queue.get()
                 print('Replaying block: {}'.format(block_ref))
                 block = self.cache.get(block_ref)
@@ -176,6 +179,8 @@ class BlockchainFollower(object):
                 if block_event is not None:
                     yield block_event
 
+            if self.cancel_flag.is_set():
+                return
             # Try to pull an event off of the incoming event queue
             # If there's no event received within a second,
             # sleep for a bit and loop back.
