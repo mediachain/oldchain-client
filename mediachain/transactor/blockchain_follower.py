@@ -186,8 +186,6 @@ class BlockchainFollower(object):
             # sleep for a bit and loop back.
             try:
                 e = self.incoming_event_queue.get(block=False, timeout=1)
-                if e == '__abort__':
-                    return
                 block_ref = block_event_ref(e)
                 if block_ref is not None:
                     self.last_known_block_ref = block_ref
