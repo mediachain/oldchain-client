@@ -94,9 +94,9 @@ class BlockchainFollower(object):
                 return
 
             if ref_base58(ref) == self.last_known_block_ref:
-                print('hit last known block: {}'.format(
-                    self.last_known_block_ref
-                ))
+                # print('hit last known block: {}'.format(
+                #     self.last_known_block_ref
+                # ))
                 self.catchup_complete.set()
                 continue
 
@@ -165,7 +165,7 @@ class BlockchainFollower(object):
                 if self.cancel_flag.is_set():
                     return
                 block_ref = self.block_replay_stack.get()
-                print('Replaying block: {}'.format(block_ref))
+                # print('Replaying block: {}'.format(block_ref))
                 block = self.cache.get(block_ref)
                 entries = block.get('entries', [])
                 for e in entries:
