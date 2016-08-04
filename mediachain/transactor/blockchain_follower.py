@@ -26,7 +26,7 @@ class BlockchainFollower(object):
         self.stream_func = stream_func
         self.block_ref_queue = Queue()
         self.incoming_event_queue = Queue()
-        self.block_replay_queue = LifoQueue()
+        self.block_replay_stack = LifoQueue()
         self.catchup_begin = threading.Event()
         self.catchup_complete = threading.Event()
         self.cancel_flag = threading.Event()
@@ -72,8 +72,8 @@ class BlockchainFollower(object):
 
         with self.block_ref_queue.mutex:
             self.block_ref_queue.queue.clear()
-        with self.block_replay_queue.mutex:
-            self.block_replay_queue.queue.clear()
+        with self.block_replay_stack.mutex:
+            self.block_replay_stack.queue.clear()
         with self.incoming_event_queue.mutex:
             self.incoming_event_queue.queue.clear()
 
@@ -108,7 +108,7 @@ class BlockchainFollower(object):
                 print('Could not get block with ref {}'.format(ref))
                 return
 
-            self.block_replay_queue.put(ref)
+            self.block_replay_stack.put(ref)
 
             chain = chain_ref(block)
             if chain is None:
@@ -161,10 +161,10 @@ class BlockchainFollower(object):
             self.catchup_complete.wait()
 
             # get all values from the catchup queue and yield their entries
-            while not self.block_replay_queue.empty():
+            while not self.block_replay_stack.empty():
                 if self.cancel_flag.is_set():
                     return
-                block_ref = self.block_replay_queue.get()
+                block_ref = self.block_replay_stack.get()
                 print('Replaying block: {}'.format(block_ref))
                 block = self.cache.get(block_ref)
                 entries = block.get('entries', [])
