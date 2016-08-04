@@ -1,7 +1,7 @@
 import threading
 import time
 from base58 import b58encode
-from Queue import Queue, Empty as QueueEmpty
+from Queue import Queue, LifoQueue, Empty as QueueEmpty
 from mediachain.transactor.block_cache import get_block_cache
 from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
 from mediachain.datastore.utils import ref_base58
@@ -26,7 +26,7 @@ class BlockchainFollower(object):
         self.stream_func = stream_func
         self.block_ref_queue = Queue()
         self.incoming_event_queue = Queue()
-        self.block_replay_queue = Queue()
+        self.block_replay_queue = LifoQueue()
         self.catchup_begin = threading.Event()
         self.catchup_complete = threading.Event()
         self.cancel_flag = threading.Event()
