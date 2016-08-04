@@ -97,7 +97,7 @@ class TransactorClient(object):
         # Keep track of the block most recently seen on the event stream
         # This is a list, because python scoping rules are crazy
         # see: http://stackoverflow.com/a/4851555
-        last_seen_block = [None]
+        last_seen_block = [last_known_block_ref]
 
         def filter_and_map_event(e):
             ref = None
