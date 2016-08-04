@@ -73,7 +73,7 @@ class BlockchainFollower(object):
         with self.block_ref_queue.mutex:
             self.block_ref_queue.queue.clear()
         with self.block_replay_stack.mutex:
-            self.block_replay_stack.queue.clear()
+            del self.block_replay_stack.queue[:]
         with self.incoming_event_queue.mutex:
             self.incoming_event_queue.queue.clear()
 
