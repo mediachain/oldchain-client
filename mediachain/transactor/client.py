@@ -94,15 +94,27 @@ class TransactorClient(object):
                          catchup=True,
                          last_known_block_ref=None,
                          timeout=None):
+        # Keep track of the block most recently seen on the event stream
+        # This is a list, because python scoping rules are crazy
+        # see: http://stackoverflow.com/a/4851555
+        last_seen_block = [None]
+
         def filter_and_map_event(e):
             ref = None
             if e.WhichOneof('event') == 'insertCanonicalEvent':
                 ref = e.insertCanonicalEvent.reference
             elif e.WhichOneof('event') == 'updateChainEvent':
                 ref = e.updateChainEvent.canonical.reference
+            elif e.WhichOneof('event') == 'journalBlockEvent':
+                last_seen_block[0] = e.journalBlockEvent.reference
             if ref is None:
                 return None
-            return ref, reader.get_object(self, ref)
+
+            return {
+                'canonical_id': ref,
+                'prev_block_ref': last_seen_block[0],
+                'record': reader.get_object(self, ref)
+            }
 
         return self.journal_stream(catchup=catchup,
                                    last_known_block_ref=last_known_block_ref,
