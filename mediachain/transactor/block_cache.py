@@ -25,8 +25,8 @@ def open_db(path):
         return rocksdb.DB(path, opts)
     except ImportError:
         logger = get_logger(__name__)
-        logger.info('using in-memory blockchain cache. please install '
-                    'rocksdb to enable persistent cache')
+        logger.warning('using in-memory blockchain cache. please install '
+                       'rocksdb to enable persistent cache')
         return InMemoryCache()
 
 
