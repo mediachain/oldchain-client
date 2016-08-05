@@ -6,6 +6,7 @@ from mediachain.transactor.block_cache import get_block_cache
 from mediachain.proto import Transactor_pb2  # pylint: disable=no-name-in-module
 from mediachain.datastore.utils import ref_base58
 from mediachain.rpc.utils import with_retry
+from mediachain.utils.log import get_logger
 from grpc.beta.interfaces import StatusCode
 from grpc.framework.interfaces.face.face import AbortionError
 
@@ -63,7 +64,8 @@ class BlockchainFollower(object):
         self.incoming_event_thread.start()
 
     def cancel(self):
-        # print('BlockchainFollower cancel')
+        logger = get_logger(__name__)
+        logger.info('BlockchainFollower canceled')
         self.cancel_flag.set()
 
     def _clear_queues(self):
@@ -81,6 +83,7 @@ class BlockchainFollower(object):
         if not self.should_catchup:
             return
 
+        logger = get_logger(__name__)
         while True:
             if self.cancel_flag.is_set():
                 return
@@ -94,25 +97,23 @@ class BlockchainFollower(object):
                 return
 
             if ref_base58(ref) == self.last_known_block_ref:
-                # print('hit last known block: {}'.format(
-                #     self.last_known_block_ref
-                # ))
+                logger.debug('hit last known block: {}'.format(
+                    self.last_known_block_ref
+                ))
                 self.catchup_complete.set()
                 continue
 
             block = self.cache.get(ref)
 
             if block is None:
-                # FIXME: we need to handle this better
-                # should throw or otherwise signal that something went wrong
-                print('Could not get block with ref {}'.format(ref))
+                logger.error('Could not get block with ref {}'.format(ref))
                 return
 
             self.block_replay_stack.put(ref)
 
             chain = chain_ref(block)
             if chain is None:
-                # print('Reached genesis block {}'.format(ref))
+                logger.debug('Reached genesis block {}'.format(ref))
                 self.catchup_complete.set()
                 continue
 
@@ -153,6 +154,7 @@ class BlockchainFollower(object):
         with_retry(event_receive_worker, max_retry_attempts=self.max_retry)
 
     def _event_stream(self):
+        logger = get_logger(__name__)
         while True:
             if self.cancel_flag.is_set():
                 return
@@ -165,7 +167,7 @@ class BlockchainFollower(object):
                 if self.cancel_flag.is_set():
                     return
                 block_ref = self.block_replay_stack.get()
-                # print('Replaying block: {}'.format(block_ref))
+                logger.debug('Replaying block: {}'.format(block_ref))
                 block = self.cache.get(block_ref)
                 entries = block.get('entries', [])
                 for e in entries:

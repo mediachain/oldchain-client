@@ -1,5 +1,6 @@
 import time
 import random
+from mediachain.utils.log import get_logger
 from grpc.beta.interfaces import StatusCode
 from grpc.framework.interfaces.face.face import AbortionError
 
@@ -12,6 +13,7 @@ RETRYABLE_ERRORS = [
 
 
 def with_retry(func, *args, **kwargs):
+    logger = get_logger(__name__)
     max_attempts = kwargs.pop('max_retry_attempts', MAX_ATTEMPTS)
     try:
         operation = str(func._method)
@@ -31,7 +33,7 @@ def with_retry(func, *args, **kwargs):
             if e.code not in RETRYABLE_ERRORS:
                 raise e
             if attempts >= max_attempts:
-                print('Operation {} failed after {} attempts'.format(
+                logger.error('Operation {} failed after {} attempts'.format(
                     operation, attempts
                 ))
                 raise e
@@ -40,7 +42,7 @@ def with_retry(func, *args, **kwargs):
 
         base_delay = min((BACKOFF_COEFF * (2 ** attempts)) / 1000.0, 60.0)
         delay = random.uniform(0, base_delay)
-        print('Operation {} failed, retrying in {}s'.format(
+        logger.info('Operation {} failed, retrying in {}s'.format(
             operation, delay))
         time.sleep(delay)
         attempts += 1
