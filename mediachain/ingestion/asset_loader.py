@@ -3,11 +3,12 @@ from urlparse import urlparse
 import requests
 import base64
 import mimetypes
-from PIL import Image
-from StringIO import StringIO
+from mediachain.utils.log import get_logger
 
 
 def load_asset(asset):
+    logger = get_logger(__name__)
+
     try:
         uri = asset['uri']
     except (TypeError, KeyError):
@@ -25,14 +26,14 @@ def load_asset(asset):
             with open(file_path) as f:
                 return f.read(), mime
         except IOError as e:
-            print('error reading from {}: {}'.format(file_path, e))
+            logger.error('error reading from {}: {}'.format(file_path, e))
             return None, None
 
     try:
         r = requests.get(uri)
         return r.content, mime
     except requests.exceptions.RequestException as e:
-        print('error downloading media from {}: {}'.format(uri, e))
+        logger.error('error downloading media from {}: {}'.format(uri, e))
 
     return None, None
 

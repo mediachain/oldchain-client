@@ -2,7 +2,7 @@ import json
 import os
 from jsonschema import validate as validate_schema
 from mediachain.translation.utils import is_mediachain_object, is_canonical
-
+from mediachain.utils.log import get_logger
 
 class Translator(object):
     __version__ = None
@@ -76,7 +76,8 @@ class Translator(object):
         res = cls._translate(parsed_metadata)
         if not os.environ.get('MEDIACHAIN_SKIP_SCHEMA_VALIDATION', False):
             validated = cls.validate(res)
-            print "Found {} valid Mediachain cells".format(validated)
+            logger = get_logger(__name__)
+            logger.info("Found {} valid Mediachain cells".format(validated))
 
         return res
 

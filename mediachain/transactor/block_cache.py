@@ -5,7 +5,7 @@ from mediachain.datastore.utils import ref_base58, bytes_for_object, \
     object_for_bytes
 from mediachain.datastore.data_objects import MultihashReference
 from mediachain.utils.file import mkdir_p, system_cache_dir
-
+from mediachain.utils.log import get_logger
 
 class InMemoryCache(object):
     def __init__(self):
@@ -24,8 +24,9 @@ def open_db(path):
         opts = rocksdb.Options(create_if_missing=True)
         return rocksdb.DB(path, opts)
     except ImportError:
-        print('using in-memory blockchain cache. please install '
-              'rocksdb to enable persistent cache')
+        logger = get_logger(__name__)
+        logger.warning('using in-memory blockchain cache. please install '
+                       'rocksdb to enable persistent cache')
         return InMemoryCache()
 
 

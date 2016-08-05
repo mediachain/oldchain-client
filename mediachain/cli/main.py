@@ -13,6 +13,9 @@ def set_grpc_verbosity():
 
 set_grpc_verbosity()
 
+from mediachain.utils.log import config_logging
+config_logging(level=os.environ.get('MEDIACHAIN_VERBOSITY', 'WARNING'))
+
 from mediachain.reader import api
 from mediachain.reader.utils import dump
 from mediachain.datastore import set_use_ipfs_for_raw_data, get_db
@@ -22,6 +25,8 @@ from mediachain.writer import Writer
 from mediachain.translation import get_translator
 from mediachain.ingestion.directory_iterator import LocalFileIterator
 from mediachain.transactor.client import TransactorClient
+
+
 
 
 def main(arguments=None):
