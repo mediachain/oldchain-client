@@ -22,7 +22,7 @@ def get_object(transactor, object_id):
     try:
         entity_id = obj['entity']
         obj['entity'] = get_object(transactor, entity_id)
-    except KeyError as e:
+    except (KeyError, TypeError):
         pass
 
     return obj
