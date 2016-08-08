@@ -162,26 +162,27 @@ class BlockchainFollower(object):
                 return
             # wait until catchup process signals that it's complete
             # this will be immediate if catchup is not in progress
-            self.catchup_complete.wait()
+            if self.should_catchup:
+                self.catchup_complete.wait()
 
-            # get all values from the catchup queue and yield their entries
-            while not self.block_replay_stack.empty():
-                if self.cancel_flag.is_set():
-                    return
-                block_ref = self.block_replay_stack.get()
-                logger.debug('Replaying block: {}'.format(block_ref))
-                block = self.cache.get(block_ref)
-                entries = block.get('entries', [])
-                for e in entries:
-                    e = self.event_map_fn(block_event_to_rpc_event(e))
-                    if e is not None:
-                        yield e
-                self.last_known_block_ref = block_ref
-                block_event = Transactor_pb2.JournalEvent()
-                block_event.journalBlockEvent.reference = ref_base58(block_ref)
-                block_event = self.event_map_fn(block_event)
-                if block_event is not None:
-                    yield block_event
+                # get all values from the catchup queue and yield their entries
+                while not self.block_replay_stack.empty():
+                    if self.cancel_flag.is_set():
+                        return
+                    block_ref = self.block_replay_stack.get()
+                    logger.debug('Replaying block: {}'.format(block_ref))
+                    block = self.cache.get(block_ref)
+                    entries = block.get('entries', [])
+                    for e in entries:
+                        e = self.event_map_fn(block_event_to_rpc_event(e))
+                        if e is not None:
+                            yield e
+                    self.last_known_block_ref = block_ref
+                    block_event = Transactor_pb2.JournalEvent()
+                    block_event.journalBlockEvent.reference = ref_base58(block_ref)
+                    block_event = self.event_map_fn(block_event)
+                    if block_event is not None:
+                        yield block_event
 
             if self.cancel_flag.is_set():
                 return
