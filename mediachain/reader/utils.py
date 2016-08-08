@@ -14,8 +14,11 @@ def stringify_refs(obj):
     for k, v in obj.iteritems():
         if isinstance(v, dict):
             v = stringify_refs(v)
-        if k == u'@link':
-            v = base58.b58encode(v)
+        if k == u'@link' and isinstance(v, basestring):
+            try:
+                v = base58.b58encode(v)
+            except (ValueError, AttributeError, TypeError):
+                pass
         res[k] = v
     return res
 
