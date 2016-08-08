@@ -81,6 +81,7 @@ class BlockchainFollower(object):
 
     def _perform_catchup(self):
         if not self.should_catchup:
+            self.catchup_complete.set()
             return
 
         logger = get_logger(__name__)
@@ -124,8 +125,9 @@ class BlockchainFollower(object):
             # first clear out all the queues, and event state,
             # in case we're being called from the retry helper after a stream
             # interruption
-            self.catchup_complete.clear()
-            self.catchup_begin.clear()
+            if self.should_catchup:
+                self.catchup_complete.clear()
+                self.catchup_begin.clear()
             self._clear_queues()
             first_event_received = False
 
