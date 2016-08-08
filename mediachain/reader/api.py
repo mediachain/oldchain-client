@@ -14,7 +14,7 @@ def get_and_print_object(transactor, object_id):
 
 def get_object(transactor, object_id):
     db = get_db()
-    base = db.get(object_id)
+    base = db.get(object_id, retry_if_missing=True)
     head = transactor.get_chain_head(object_id)
     chain = get_object_chain(head, [])
     obj = reduce(chain_folder, chain, base)
@@ -22,7 +22,7 @@ def get_object(transactor, object_id):
     try:
         entity_id = obj['entity']
         obj['entity'] = get_object(transactor, entity_id)
-    except KeyError as e:
+    except (KeyError, TypeError):
         pass
 
     return obj
@@ -105,7 +105,7 @@ def get_object_chain(reference, acc):
         return acc
 
     db = get_db()
-    obj = db.get(reference)
+    obj = db.get(reference, retry_if_missing=True)
 
     try:
         next_ref = obj['chain']['@link']

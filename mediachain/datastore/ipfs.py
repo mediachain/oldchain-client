@@ -62,7 +62,7 @@ class IpfsDatastore(object):
         hashes = [h['Hash'] for h in result if h['Name'] == name]
         return multihash_ref(hashes[0])
 
-    def get(self, ref, timeout=TIMEOUT_SECS):
+    def get(self, ref, timeout=TIMEOUT_SECS, retry_if_missing=False):
         stream = self.open(ref, timeout=timeout)
         byte_string = stream.read()
         return object_for_bytes(byte_string)

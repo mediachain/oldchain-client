@@ -71,11 +71,15 @@ class RpcDatastore(object):
         self.put_cache.add(ref.multihash)
         return ref
 
-    def get(self, ref, timeout=TIMEOUT_SECS):
+    def get(self, ref, timeout=TIMEOUT_SECS, retry_if_missing=False):
         ref = rpc_ref(ref)
         get_with_retry = functools.partial(with_retry, self.rpc.get)
+        extra_retry_status_codes = []
+        if retry_if_missing:
+            extra_retry_status_codes.append(StatusCode.NOT_FOUND)
+
         try:
-            obj_bytes = get_with_retry(ref, timeout).data
+            obj_bytes = get_with_retry(ref, timeout, extra_retry_status_codes=extra_retry_status_codes).data
         except AbortionError as e:
             if e.code == StatusCode.NOT_FOUND:
                 return None
