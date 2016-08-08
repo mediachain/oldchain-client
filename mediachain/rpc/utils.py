@@ -15,6 +15,11 @@ RETRYABLE_ERRORS = [
 def with_retry(func, *args, **kwargs):
     logger = get_logger(__name__)
     max_attempts = kwargs.pop('max_retry_attempts', MAX_ATTEMPTS)
+    extra_retry_status_codes = kwargs.pop('extra_retry_status_codes', [])
+    if not isinstance(extra_retry_status_codes, list):
+        extra_retry_status_codes = [extra_retry_status_codes]
+    retryable_errors = RETRYABLE_ERRORS + extra_retry_status_codes
+
     try:
         operation = str(func._method)
     except AttributeError:
@@ -30,7 +35,7 @@ def with_retry(func, *args, **kwargs):
         except AbortionError as e:
             # pylint doesn't like grpc's crazy exception hierarchy
             # pylint: disable=raising-non-exception
-            if e.code not in RETRYABLE_ERRORS:
+            if e.code not in retryable_errors:
                 raise e
             if attempts >= max_attempts:
                 logger.error('Operation {} failed after {} attempts'.format(
