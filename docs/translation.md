@@ -177,4 +177,38 @@ with more information.  In the above example, the da Vinci `Entity` will be
 created if it does not already exist, and linked to the `Artefact` with an 
 `ArtefactCreationCell`.
 
+#### A note about multihash references
+Links between objects are made using a [multihash](https://github.com/multiformats/multihash),
+which is a compact binary format for encoding various cryptographic hash digests along with a
+code to identify the hash algorithm.  In the current mediachain implementation, we embed
+multihash references in records using a dictionary, which is sent over the wire as a
+[cbor](http://cbor.io) map.  The dictionary has a key called `@link`, whose value is the byte
+string value of the multihash.
+
+This representation is based on an early draft of the [IPLD spec](https://github.com/ipld/specs/tree/master/ipld),
+which has since been updated.  In the current spec, the "json-like" representation of a link
+is a map of the form `{"/": "QmF00..."}`, where the special key `/` is used instead of `@link`.
+The value can be either a base58-encoded multihash, or a binary-encoded [multiaddr](https://github.com/multiformats/multiaddr).
+
+When sent over the wire, the link map is transformed into a tagged cbor value for compact and
+deterministic storage.
+
+We are currently transitioning to the new link format in preparation for full IPLD compatibility.
+Links in the old format will still be resolvable through the mediachain tooling, but will be phased
+out for new records.
+
+In the examples above, the multihash links are created by the writer, and inserted into the
+appropriate place in the translator's output.  If you need to link to an existing ipfs resource,
+you can use the `multihash_ref` helper in the `mediachain.datastore.utils` package:
+
+```python
+from mediachain.datastore.utils import multihash_ref
+
+ref = multihash_ref("QmF00...")
+my_metadata['interesting_thing_link'] = ref.to_map()
+```
+
+This will embed the link in your metadata in the correct format.
+
+
 [mediachain-format-docs]: http://github.com/mediachain/mediachain/blob/master/docs/data-structures.md
