@@ -52,10 +52,7 @@ The output of a `DatasetIterator` may also include a `local_assets` key, which,
   
  A generic `DirectoryIterator` can be used to walk a local directory and
  attempt to parse its contents.  If you're not hitting an external API, you
- can either use it directly or customize it by subclassing.  For a concrete
- example, see the [`GettyDumpIterator`](../mediachain/ingestion/getty_dump_iterator.py)
- class in the `mediachain.ingestion` module, which extends `DirectoryIterator` to 
- provide `local_asset` uris relative to the metadata files in the dataset archive.
+ can either use it directly or customize it by subclassing.
 
 
 ### Translation
@@ -69,25 +66,22 @@ The goal of the translator is to pull a subset of fields out of the original
 metadata to enable efficient indexing and search by other mediachain clients.
  
 #### Translator IDs
-~~Each translator should have a unique string identifier that can be used by
-clients to figure out the source of the data.  The string should contain a
-version number, which should be updated whenever the translator is updated.
-For example, the current Getty images translator has the identifier 
-`GettyTranslator/0.1`.~~
+Translators should have a unique string identifier, which will be combined with a
+version hash and written to the mediachain records.
 
 Please see [this document](https://github.com/mediachain/mediachain/blob/master/docs/translators.md#translator-lifecycle)
 for more on how translators are versioned and distributed.
 
 The id of the translator is written into the mediachain records to help
 clients understand how they were created.
- 
+
+#### Translator output format
+
 The [mediachain data format][mediachain-format-docs] consists of a collection
-of immutable data records, with updates applied in "chains" that form a 
+of immutable data records, with updates applied in "chains" that form a
 reverse linked list.  The translator output format is very close to the final
 mediachain object representation, with some changes to be able to represent
 links between objects without knowing their final content hash.
-
-#### Translator output format
 
 Here's an example of the output format that will result in three mediachain
 records being written to the datastore:
@@ -125,16 +119,24 @@ records being written to the datastore:
 }
 ```
 
+#### Tagged dictionaries
 There are two special keys that indicate to the writer that the containing objects
 need special processing.  Dictionaries tagged with `__mediachain_object__`
 will be submitted to the transactor network, and they will be replaced by
 a multihash link in the containing object.
 
-The same is true of objects tagged with `__mediachain_asset__`, however instead
- of being sent to the transactor, the writer will attempt to resolve the `uri` 
- and submit the contents to the datastore directly.  Remote assets produced
- by the translator may be superseded by local assets from the `DatasetIterator`
- if they exist.
+##### Binary asset links
+The `__mediachain_asset__` tag is used when you want to include a reference to
+a binary asset, for example, a thumbnail image.  These should include a `uri`
+field, which may be either a remote http(s) url, or a file uri.  By default,
+the writer will attempt to download remote assets and store them in ipfs,
+and it will include a multihash link so that other clients can fetch the asset.
+If possible, the writer will also include `mime-type`, `content_size` and
+`hash_sha256` fields to provide more information to readers.
+
+If remote downloads are disabled, only the `uri` field will be included, and
+readers can try to retrieve the asset themselves.
+
 
 The tagged objects are submitted depth-first, and the
 `canonical` is submitted before any entries in the `chain`.  So in the above
@@ -146,18 +148,19 @@ something similar to this:
 { 
   'type': 'artefact',
   'meta': {
-    'translator': 'FooTranslator/0.2',
+    'translator': 'FooTranslator@QmF00',
     'data': {
       'title': 'The Last Supper',
       'thumbnail': {
-        '/': 'QmAAA...AAA'
+        'link': {'@link': 'QmAAA...AAA'},
+        'content_size': 12345678,
+        'hash_sha256': 'a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447',
+        'mime-type': 'image/jpeg'
       }
     }
   }
 }
 ```
-
-Where `'QmAAA...AAA'` is the hash of the thumbnail's contents.  
 
 
 Note that the `__mediachain_object__` tag is removed before submitting; 
