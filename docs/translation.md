@@ -153,6 +153,7 @@ something similar to this:
       'title': 'The Last Supper',
       'thumbnail': {
         'link': {'@link': 'QmAAA...AAA'},
+        'uri': 'http://example.com/last_supper.jpg',
         'content_size': 12345678,
         'hash_sha256': 'a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447',
         'mime-type': 'image/jpeg'
