@@ -61,18 +61,17 @@ If datastore service is running on a different host than the transactor service,
  
 #### IPFS Configuration
 
-While we're transitioning to using IPFS to store all of our data, IPFS is
- currently only enabled if you pass in the `-i` or `--use-ipfs` flag.  This will
- send raw metadata and media files (thumbnails, etc) to IPFS via the HTTP
- gateway, which by default is assumed to be running on the same machine as
- the client.
- 
-When IPFS is enabled, the client will still connect to the datastore RPC 
-service, since mediachain records and the journal blockchain are not yet
-being stored in IPFS.
+While we're transitioning to using ipfs to store all of our data, ipfs is
+currently only used for binary assets (thumbnails, etc) and raw metadata.
+You can opt-out of storing things in ipfs by passing the `--disable-ipfs`
+flag, but please note that ipfs will still be required when writing records
+using a translator, since it's used when resolving translators by their
+version ids.
 
-If you enable IPFS when writing data, you should also enable it when reading,
-otherwise thumbnails and other data may fail to load.
+By default the ipfs daemon is assumed to be running on the same machine as
+the client.  Use `--ipfs-host` and `--ipfs-port` flags if you want to connect
+to an ipfs daemon running on another machine or on a non-standard port.
+
 
 ### Reading
 Mediachain records can be retrieved by id using the `get` command:
@@ -103,14 +102,19 @@ raw metadata to the distributed datastore.
 
 ### Metadata Translation
 
-A translator for the Getty Images dataset is currently supported.
+The current set of schema translators lives in the [schema-translators repository](https://github.com/mediachain/schema-translators).
+When ingesting records, you need to provide the name and ipfs hash of a published translator,
+which will be fetched via ipfs and used to extract information from a dataset.  By cloning that
+repository and running `python setup.py publish_translators`, you can get a list of the latest
+translators and their most current version hashes.
 
-To use it, invoke the `mediachain` client with the translator id 
-`GettyTranslator/0.1` and pass in a path to a local directory containing
-JSON data from the Getty Images API as the `metadata-location`:
+When ingesting data, you provide a `name@version` identifier for the translator you want to use.
+
+For example, to use the translator for the Artsy API json at version `QmTvzPcDjKyAP9nx3tLnE3k9kMmB4QXF7hzZTM2vLDHtUA`,
+you would use the translator id `artsy@QmTvzPcDjKyAP9nx3tLnE3k9kMmB4QXF7hzZTM2vLDHtUA`:
 
 ```bash
-mediachain [config-options] ingest GettyTranslator/0.1 ~/datasets/getty
+mediachain [config-options] ingest artsy@QmTvzPcDjKyAP9nx3tLnE3k9kMmB4QXF7hzZTM2vLDHtUA ~/datasets/artsy/1.json
 ```
 
 ## Internals
