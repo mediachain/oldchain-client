@@ -54,7 +54,8 @@ class IpfsDatastore(object):
         # {u'Bytes': 22, u'Name': u'/tmp/foo/bar/tmp7Hobfu'}
         # followed by entries for the file, plus entries for '/tmp', '/tmp/foo',
         # etc.
-        header = result.pop(0)
+        # This handles legacy and latest version of ipfs-api repository
+        header = result.pop(0) if type(result) is list else result
         if 'Hash' in header:
             return header['Hash']
 
