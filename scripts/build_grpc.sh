@@ -19,10 +19,11 @@ fi
 
 for file in `ls $PROTOBUF_DIR`; do
     $PYTHON -m grpc.tools.protoc -I $PROTOBUF_DIR  --python_out=$PROTOS_OUT_DIR --grpc_python_out=$PROTOS_OUT_DIR $PROTOBUF_DIR/$file
-    if [ $? -ne 0 ] || [ ! -e $PROTOBUF_DIR/$file ]
+    retval=$?
+    if [ $retval -ne 0 ] 
     then
         echo "Failed to generate protobuf for $file!"
-        exit 1
+        exit $retval
     fi
 done
 
