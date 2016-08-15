@@ -3,6 +3,7 @@ import os, sys
 import pip
 from setuptools import setup, find_packages
 from setuptools.command.build_py import build_py as _build_py
+from distutils.version import StrictVersion as V
 
 reqs_file = os.path.join(os.path.dirname(os.path.realpath(__file__))
                    , "requirements.txt")
@@ -11,10 +12,14 @@ reqs = None
 with open(reqs_file) as f:
     reqs = f.readlines()
 
+def assert_min_pip_version():
+    assert V(pip.__version__) >= V('8.0.0'), "pip version is out of date.  please update with 'pip install -U pip'"
+
 def install_grpcio_tools():
     pip.main(['install', 'grpcio-tools==0.15.1'])
 
 def _pre_build_py(dir):
+    assert_min_pip_version()
     install_grpcio_tools()
     from subprocess import check_call
     check_call(['scripts/build_grpc.sh', sys.executable],
