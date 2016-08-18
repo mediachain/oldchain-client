@@ -182,7 +182,7 @@ class Writer(object):
 
         try:
             link_obj['uri'] = remote_asset['uri']
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, LookupError):
             pass
         if mime:
             link_obj['mime_type'] = mime
