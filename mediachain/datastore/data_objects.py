@@ -1,5 +1,5 @@
 import cbor
-from multihash import SHA2_256, encode as multihash_encode
+from multihash import SHA2_256, encode as multihash_encode, decode as multihash_decode
 from base58 import b58encode, b58decode
 
 
@@ -18,6 +18,7 @@ class MultihashReference(object):
 
     def __init__(self, multihash):
         self.multihash = bytes(multihash)
+        multihash_decode(self.multihash)  # This will throw a ValueError if multihash is invalid
 
     def __repr__(self):
         return u'MultihashReference: ' + self.multihash_base58()
