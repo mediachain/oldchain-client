@@ -37,13 +37,21 @@ class IpfsDatastore(object):
                 'https://ipfs.io/docs/install'.format(host, port)
             )
 
-    def put(self, data_object, timeout=TIMEOUT_SECS):
+        self.hash_only_cmd = ipfsApi.FileCommand('/add?n=true')
+
+    def hash_only(self, filename, **kwargs):
+        return self.hash_only_cmd.request(self.client._client, filename, **kwargs)
+
+    def put(self, data_object, timeout=TIMEOUT_SECS, hash_only=False):
         content = bytes_for_object(data_object)
 
         with NamedTemporaryFile() as f:
             f.write(content)
             f.flush()
-            result = self.client.add(f.name, timeout=timeout)
+            if hash_only:
+                result = self.hash_only(f.name, timeout=timeout)
+            else:
+                result = self.client.add(f.name, timeout=timeout)
 
         if isinstance(result, basestring):
             return result
