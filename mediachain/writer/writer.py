@@ -22,11 +22,11 @@ def print_err(*args, **kwargs):
 class Writer(object):
     def __init__(self, transactor, datastore=None,
                  download_remote_assets=False,
-                 only_hash_assets=False):
+                 local_ipfs_only=False):
         self.transactor = transactor
         self.datastore = datastore or get_db()
         self.download_remote_assets = download_remote_assets
-        self.only_hash_assets = only_hash_assets
+        self.local_ipfs = local_ipfs_only
 
     def update_artefact_direct(self, artefact_ref, update_meta_source):
         if hasattr(update_meta_source, 'read'):
@@ -167,7 +167,7 @@ class Writer(object):
 
     def store_raw(self, raw_content):
         store = get_raw_datastore()
-        ref = store.put(raw_content, hash_only=self.only_hash_assets)
+        ref = store.put(raw_content, local=self.local_ipfs)
         return multihash_ref(ref)
 
     def store_asset(self, local_asset, remote_asset):

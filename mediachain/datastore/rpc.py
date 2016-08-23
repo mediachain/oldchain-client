@@ -59,11 +59,12 @@ class RpcDatastore(object):
         self.rpc = Datastore_pb2.beta_create_DatastoreService_stub(channel)
         self.put_cache = set()
 
-    def put(self, data_object, timeout=TIMEOUT_SECS, only_hash=False):
+    def put(self, data_object, **kwargs):
+        timeout = kwargs.pop('timeout', TIMEOUT_SECS)
         put_with_retry = functools.partial(with_retry, self.rpc.put)
         byte_string = bytes_for_object(data_object)
         content_hash = MultihashReference.for_content(byte_string)
-        if only_hash or content_hash.multihash in self.put_cache:
+        if content_hash.multihash in self.put_cache:
             return content_hash
 
         req = Datastore_pb2.DataObject(data=byte_string)
