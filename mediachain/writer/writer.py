@@ -228,6 +228,11 @@ def duplicate_canonical_ref(grpc_error):
 def grpc_error_meta(grpc_error):
     meta = dict()
     for item in grpc_error.initial_metadata:
-        k = item.key.lower()
-        meta[k] = item.value
+        try:
+            k = item.key.lower()
+            meta[k] = item.value
+        except AttributeError:
+            # grpcio 1.0.0 changed the metadata implementation to return tuples of kv pairs
+            k, v = item
+            meta[k.lower()] = v
     return meta
