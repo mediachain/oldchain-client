@@ -20,9 +20,9 @@ class Translator(object):
 
     @classmethod
     def versioned_id(cls):
-        return '{id}@{version}'.format(
-            id=cls.translator_id(),
-            version=cls.__version__ or 'UNKNOWN_VERSION'
+        return u'{id}@{version}'.format(
+            id=unicode(cls.translator_id()),
+            version=cls.__version__ or u'UNKNOWN_VERSION'
         )
 
     @staticmethod

@@ -47,7 +47,7 @@ class Writer(object):
     def update_with_translator(self, canonical_ref, dataset_iterator):
         translator = dataset_iterator.translator
         translator_info = {
-            'id': translator.versioned_id(),
+            'id': unicode(translator.versioned_id()),
         }
         result = next(dataset_iterator)
         translated = result['translated']
