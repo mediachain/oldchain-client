@@ -61,6 +61,9 @@ def bytes_for_object(obj):
 
 def object_for_bytes(obj_bytes):
     try:
-        return cbor.loads(obj_bytes)
+        decoded = cbor.loads(obj_bytes)
+        if isinstance(decoded, dict):
+            return decoded
     except ValueError:
-        return obj_bytes
+        pass
+    return obj_bytes

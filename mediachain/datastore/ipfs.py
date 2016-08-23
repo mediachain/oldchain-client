@@ -37,13 +37,27 @@ class IpfsDatastore(object):
                 'https://ipfs.io/docs/install'.format(host, port)
             )
 
-    def put(self, data_object, timeout=TIMEOUT_SECS):
+        self.hash_only_cmd = ipfsApi.FileCommand('/add?n=true')
+
+    def hash_only(self, filename, **kwargs):
+        """
+        Just return the ipfs hash of the file without adding.
+        To be replaced by the upcoming `ipfs add --local` command,
+        which will add to the local ipfs repo, but not provide the
+        the file to the network.
+        """
+        return self.hash_only_cmd.request(self.client._client, filename, **kwargs)
+
+    def put(self, data_object, timeout=TIMEOUT_SECS, local=False):
         content = bytes_for_object(data_object)
 
         with NamedTemporaryFile() as f:
             f.write(content)
             f.flush()
-            result = self.client.add(f.name, timeout=timeout)
+            if local:
+                result = self.hash_only(f.name, timeout=timeout)
+            else:
+                result = self.client.add(f.name, timeout=timeout)
 
         if isinstance(result, basestring):
             return result
@@ -64,8 +78,8 @@ class IpfsDatastore(object):
         return multihash_ref(hashes[0])
 
     def get(self, ref, timeout=TIMEOUT_SECS, retry_if_missing=False):
-        stream = self.open(ref, timeout=timeout)
-        byte_string = stream.read()
+        with self.open(ref, timeout=timeout) as stream:
+            byte_string = stream.read()
         return object_for_bytes(byte_string)
 
     def open(self, ref, timeout=TIMEOUT_SECS):
