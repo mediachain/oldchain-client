@@ -1,3 +1,5 @@
+## **DEPRECATED: the client for the current Mediachain system is https://github.com/mediachain/aleph** 
+
 # mediachain-client
 
 A client library and minimal command line interface for reading data from and 
